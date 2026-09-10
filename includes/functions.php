@@ -34,3 +34,55 @@ function redirectByRole(string $role): never
 
     exit;
 }
+
+function generateCsrfToken(): string
+{
+    if (
+        empty($_SESSION['csrf_token']) ||
+        !is_string($_SESSION['csrf_token'])
+    ) {
+        $_SESSION['csrf_token'] = bin2hex(
+            random_bytes(32)
+        );
+    }
+
+    return $_SESSION['csrf_token'];
+}
+
+function verifyCsrfToken(?string $token): bool
+{
+    if (
+        !isset($_SESSION['csrf_token']) ||
+        !is_string($token)
+    ) {
+        return false;
+    }
+
+    return hash_equals(
+        $_SESSION['csrf_token'],
+        $token
+    );
+}
+
+function setFlash(
+    string $type,
+    string $message
+): void {
+    $_SESSION['flash'] = [
+        'type' => $type,
+        'message' => $message
+    ];
+}
+
+function getFlash(): ?array
+{
+    if (!isset($_SESSION['flash'])) {
+        return null;
+    }
+
+    $flash = $_SESSION['flash'];
+
+    unset($_SESSION['flash']);
+
+    return $flash;
+}

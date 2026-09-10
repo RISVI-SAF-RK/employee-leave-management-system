@@ -105,3 +105,28 @@ body {
     background: #f8d7da;
     color: #842029;
 }
+.admin-body {
+    background: #f5f7fa;
+}
+
+.admin-sidebar {
+    min-height: calc(100vh - 56px);
+    background: #212529;
+}
+
+.admin-sidebar a {
+    display: block;
+    padding: 12px 20px;
+    color: #e9ecef;
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.admin-sidebar a:hover {
+    background: #343a40;
+    color: #ffffff;
+}
+
+.card {
+    border-radius: 10px;
+}
