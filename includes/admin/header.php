@@ -202,17 +202,20 @@ $avatarLetter = strtoupper(
         </div>
 
         <a
-            href="#"
-            class="sidebar-link sidebar-link-disabled"
-        >
+    href="/admin/leave-types.php"
+    class="sidebar-link
+    <?= $isActive([
+        'leave-types.php',
+        'add-leave-type.php',
+        'edit-leave-type.php'
+    ]) ?>"
+>
+    <i class="bi bi-calendar-event-fill"></i>
 
-            <i class="bi bi-calendar-event-fill"></i>
-
-            <span>
-                Leave Types
-            </span>
-
-        </a>
+    <span>
+        Leave Types
+    </span>
+</a>
 
         <a
             href="#"
