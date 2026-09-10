@@ -95,5 +95,82 @@ document.addEventListener(
             }
         );
 
+    
+        /*
+        ==========================================================
+        Employee / Manager Role Field
+        ==========================================================
+        */
+
+        const roleSelect =
+            document.getElementById(
+                'roleSelect'
+            );
+
+        const managerField =
+            document.getElementById(
+                'managerField'
+            );
+
+        const managerSelect =
+            document.getElementById(
+                'managerSelect'
+            );
+
+
+        function updateManagerField() {
+
+            if (
+                !roleSelect ||
+                !managerField
+            ) {
+                return;
+            }
+
+            const selectedOption =
+                roleSelect.options[
+                    roleSelect.selectedIndex
+                ];
+
+            const roleName =
+                selectedOption
+                    ? selectedOption.dataset.role
+                    : '';
+
+
+            if (roleName === 'Employee') {
+
+                managerField.style.display = '';
+
+                if (managerSelect) {
+                    managerSelect.required = true;
+                }
+
+            } else {
+
+                managerField.style.display = 'none';
+
+                if (managerSelect) {
+
+                    managerSelect.required = false;
+
+                    managerSelect.value = '';
+                }
+
+            }
+
+        }
+
+
+        if (roleSelect) {
+
+            updateManagerField();
+
+            roleSelect.addEventListener(
+                'change',
+                updateManagerField
+            );
+
+        }
     }
 );

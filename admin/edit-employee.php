@@ -8,9 +8,89 @@ require_once __DIR__ . '/../config/database.php';
 
 requireRole('Administrator');
 
-$pageTitle = 'Add Employee';
-
+$pageTitle = 'Edit Employee';
 $error = '';
+
+$employeeId = filter_input(
+    INPUT_GET,
+    'id',
+    FILTER_VALIDATE_INT
+);
+
+if (!$employeeId) {
+
+    setFlash(
+        'danger',
+        'Invalid employee selected.'
+    );
+
+    header(
+        'Location: /admin/employees.php'
+    );
+
+    exit;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Load Employee
+|--------------------------------------------------------------------------
+*/
+
+$stmt = $pdo->prepare(
+    "SELECT
+        e.employee_id,
+        e.user_id,
+        e.employee_code,
+        e.first_name,
+        e.last_name,
+        e.phone,
+        e.department_id,
+        e.manager_id,
+        e.job_title,
+        e.date_joined,
+        e.status AS employee_status,
+        e.created_at,
+
+        u.email,
+        u.role_id,
+        u.status AS user_status,
+
+        r.role_name
+
+     FROM employees e
+
+     INNER JOIN users u
+        ON e.user_id = u.user_id
+
+     INNER JOIN roles r
+        ON u.role_id = r.role_id
+
+     WHERE e.employee_id = :employee_id
+
+     LIMIT 1"
+);
+
+$stmt->execute([
+    'employee_id' => $employeeId
+]);
+
+$employee = $stmt->fetch();
+
+if (!$employee) {
+
+    setFlash(
+        'danger',
+        'Employee not found.'
+    );
+
+    header(
+        'Location: /admin/employees.php'
+    );
+
+    exit;
+}
 
 
 /*
@@ -28,47 +108,12 @@ $departmentStmt = $pdo->query(
      ORDER BY department_name"
 );
 
-$departments =
-    $departmentStmt->fetchAll();
+$departments = $departmentStmt->fetchAll();
 
 
 /*
 |--------------------------------------------------------------------------
-| Load Managers
-|--------------------------------------------------------------------------
-*/
-
-$managerStmt = $pdo->query(
-    "SELECT
-        e.employee_id,
-        e.employee_code,
-        e.first_name,
-        e.last_name
-     FROM employees e
-
-     INNER JOIN users u
-        ON e.user_id = u.user_id
-
-     INNER JOIN roles r
-        ON u.role_id = r.role_id
-
-     WHERE
-        e.status = 'Active'
-        AND u.status = 'Active'
-        AND r.role_name = 'Manager'
-
-     ORDER BY
-        e.first_name,
-        e.last_name"
-);
-
-$managers =
-    $managerStmt->fetchAll();
-
-
-/*
-|--------------------------------------------------------------------------
-| Load Allowed Roles
+| Load Roles
 |--------------------------------------------------------------------------
 */
 
@@ -84,13 +129,51 @@ $roleStmt = $pdo->query(
      ORDER BY role_name"
 );
 
-$roles =
-    $roleStmt->fetchAll();
+$roles = $roleStmt->fetchAll();
 
 
 /*
 |--------------------------------------------------------------------------
-| Form Submission
+| Load Available Managers
+|--------------------------------------------------------------------------
+*/
+
+$managerStmt = $pdo->prepare(
+    "SELECT
+        e.employee_id,
+        e.employee_code,
+        e.first_name,
+        e.last_name
+
+     FROM employees e
+
+     INNER JOIN users u
+        ON e.user_id = u.user_id
+
+     INNER JOIN roles r
+        ON u.role_id = r.role_id
+
+     WHERE
+        e.status = 'Active'
+        AND u.status = 'Active'
+        AND r.role_name = 'Manager'
+        AND e.employee_id != :employee_id
+
+     ORDER BY
+        e.first_name,
+        e.last_name"
+);
+
+$managerStmt->execute([
+    'employee_id' => $employeeId
+]);
+
+$managers = $managerStmt->fetchAll();
+
+
+/*
+|--------------------------------------------------------------------------
+| Update Employee
 |--------------------------------------------------------------------------
 */
 
@@ -104,9 +187,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         http_response_code(403);
 
-        exit(
-            'Invalid security token.'
-        );
+        exit('Invalid security token.');
     }
 
 
@@ -169,8 +250,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             FILTER_VALIDATE_INT
         );
 
-    $password =
-        $_POST['password']
+    $newPassword =
+        $_POST['new_password']
         ?? '';
 
     $confirmPassword =
@@ -180,7 +261,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     /*
     |--------------------------------------------------------------------------
-    | Basic Validation
+    | Validation
     |--------------------------------------------------------------------------
     */
 
@@ -209,27 +290,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'Please enter a valid email address.';
 
     } elseif (
-        strlen($password) < 8
-    ) {
-
-        $error =
-            'Password must contain at least 8 characters.';
-
-    } elseif (
-        $password !==
-        $confirmPassword
-    ) {
-
-        $error =
-            'Passwords do not match.';
-
-    } elseif (
-        strtotime($dateJoined)
-        > time()
+        strtotime($dateJoined) > time()
     ) {
 
         $error =
             'Date joined cannot be in the future.';
+
+    } elseif (
+        $newPassword !== ''
+        &&
+        strlen($newPassword) < 8
+    ) {
+
+        $error =
+            'New password must contain at least 8 characters.';
+
+    } elseif (
+        $newPassword !==
+        $confirmPassword
+    ) {
+
+        $error =
+            'New passwords do not match.';
 
     } else {
 
@@ -237,7 +319,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             /*
             |--------------------------------------------------------------------------
-            | Validate Selected Role
+            | Validate Role
             |--------------------------------------------------------------------------
             */
 
@@ -249,8 +331,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      FROM roles
                      WHERE role_id = :role_id
                        AND role_name IN (
-                            'Employee',
-                            'Manager'
+                           'Manager',
+                           'Employee'
                        )
                      LIMIT 1"
                 );
@@ -262,18 +344,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $selectedRole =
                 $selectedRoleStmt->fetch();
 
-
             if (!$selectedRole) {
 
                 throw new RuntimeException(
-                    'Invalid user role selected.'
+                    'Invalid role selected.'
                 );
             }
 
 
             /*
             |--------------------------------------------------------------------------
-            | Employee must have an assigned Manager
+            | Employees Require Manager
             |--------------------------------------------------------------------------
             */
 
@@ -285,8 +366,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ) {
 
                 throw new RuntimeException(
-                    'Please assign a Manager to the Employee.'
+                    'Please assign a Manager to this Employee.'
                 );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Prevent Manager → Employee Change
+            | if Manager still has active employees
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                $employee['role_name']
+                === 'Manager'
+                &&
+                $selectedRole['role_name']
+                === 'Employee'
+            ) {
+
+                $teamStmt =
+                    $pdo->prepare(
+                        "SELECT COUNT(*)
+                         FROM employees
+                         WHERE manager_id = :manager_id
+                           AND status = 'Active'"
+                    );
+
+                $teamStmt->execute([
+                    'manager_id' =>
+                        $employeeId
+                ]);
+
+                $activeTeam =
+                    (int)$teamStmt
+                        ->fetchColumn();
+
+                if ($activeTeam > 0) {
+
+                    throw new RuntimeException(
+                        'This Manager cannot be changed to Employee because active employees are still assigned to them.'
+                    );
+                }
             }
 
 
@@ -302,7 +424,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      FROM departments
                      WHERE department_id =
                         :department_id
-                       AND status = 'Active'
+                     AND status = 'Active'
                      LIMIT 1"
                 );
 
@@ -327,7 +449,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             |--------------------------------------------------------------------------
             */
 
-            if ($managerId) {
+            if (
+                $selectedRole['role_name']
+                === 'Employee'
+            ) {
+
+                if (
+                    $managerId ===
+                    $employeeId
+                ) {
+
+                    throw new RuntimeException(
+                        'An employee cannot be their own Manager.'
+                    );
+                }
 
                 $managerCheck =
                     $pdo->prepare(
@@ -335,22 +470,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                          FROM employees e
 
                          INNER JOIN users u
-                            ON e.user_id =
-                               u.user_id
+                            ON e.user_id = u.user_id
 
                          INNER JOIN roles r
-                            ON u.role_id =
-                               r.role_id
+                            ON u.role_id = r.role_id
 
                          WHERE
-                            e.employee_id =
-                                :manager_id
-                            AND e.status =
-                                'Active'
-                            AND u.status =
-                                'Active'
-                            AND r.role_name =
-                                'Manager'
+                            e.employee_id = :manager_id
+                            AND e.status = 'Active'
+                            AND u.status = 'Active'
+                            AND r.role_name = 'Manager'
 
                          LIMIT 1"
                     );
@@ -365,7 +494,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ) {
 
                     throw new RuntimeException(
-                        'Invalid Manager selected.'
+                        'The selected Manager is invalid.'
                     );
                 }
             }
@@ -373,7 +502,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             /*
             |--------------------------------------------------------------------------
-            | Check Duplicate Email
+            | Duplicate Email
             |--------------------------------------------------------------------------
             */
 
@@ -382,24 +511,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     "SELECT user_id
                      FROM users
                      WHERE email = :email
+                       AND user_id != :user_id
                      LIMIT 1"
                 );
 
             $emailCheck->execute([
-                'email' => $email
+                'email' =>
+                    $email,
+
+                'user_id' =>
+                    $employee['user_id']
             ]);
 
-            if ($emailCheck->fetch()) {
+            if (
+                $emailCheck->fetch()
+            ) {
 
                 throw new RuntimeException(
-                    'An account already exists with this email address.'
+                    'Another account already uses this email address.'
                 );
             }
 
 
             /*
             |--------------------------------------------------------------------------
-            | Check Duplicate Employee Code
+            | Duplicate Employee Code
             |--------------------------------------------------------------------------
             */
 
@@ -409,120 +545,141 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      FROM employees
                      WHERE employee_code =
                         :employee_code
+                       AND employee_id !=
+                        :employee_id
                      LIMIT 1"
                 );
 
             $codeCheck->execute([
                 'employee_code' =>
-                    $employeeCode
+                    $employeeCode,
+
+                'employee_id' =>
+                    $employeeId
             ]);
 
-            if ($codeCheck->fetch()) {
+            if (
+                $codeCheck->fetch()
+            ) {
 
                 throw new RuntimeException(
-                    'This employee code is already in use.'
+                    'Another employee already uses this employee code.'
                 );
             }
 
 
             /*
             |--------------------------------------------------------------------------
-            | Transaction
+            | Begin Transaction
             |--------------------------------------------------------------------------
             */
 
             $pdo->beginTransaction();
 
 
-            $passwordHash =
-                password_hash(
-                    $password,
-                    PASSWORD_DEFAULT
-                );
+            /*
+            |--------------------------------------------------------------------------
+            | Update User Account
+            |--------------------------------------------------------------------------
+            */
+
+            if ($newPassword !== '') {
+
+                $passwordHash =
+                    password_hash(
+                        $newPassword,
+                        PASSWORD_DEFAULT
+                    );
+
+                $userUpdate =
+                    $pdo->prepare(
+                        "UPDATE users
+                         SET
+                            email = :email,
+                            role_id = :role_id,
+                            password_hash =
+                                :password_hash
+                         WHERE user_id = :user_id"
+                    );
+
+                $userUpdate->execute([
+                    'email' =>
+                        $email,
+
+                    'role_id' =>
+                        $roleId,
+
+                    'password_hash' =>
+                        $passwordHash,
+
+                    'user_id' =>
+                        $employee['user_id']
+                ]);
+
+            } else {
+
+                $userUpdate =
+                    $pdo->prepare(
+                        "UPDATE users
+                         SET
+                            email = :email,
+                            role_id = :role_id
+                         WHERE user_id = :user_id"
+                    );
+
+                $userUpdate->execute([
+                    'email' =>
+                        $email,
+
+                    'role_id' =>
+                        $roleId,
+
+                    'user_id' =>
+                        $employee['user_id']
+                ]);
+            }
 
 
             /*
             |--------------------------------------------------------------------------
-            | Create User Account
+            | Update Employee
             |--------------------------------------------------------------------------
             */
 
-            $userStmt =
+            $employeeUpdate =
                 $pdo->prepare(
-                    "INSERT INTO users
-                    (
-                        email,
-                        password_hash,
-                        role_id,
-                        status
-                    )
-                    VALUES
-                    (
-                        :email,
-                        :password_hash,
-                        :role_id,
-                        'Active'
-                    )"
-                );
+                    "UPDATE employees
+                     SET
+                        employee_code =
+                            :employee_code,
 
-            $userStmt->execute([
-                'email' =>
-                    $email,
+                        first_name =
+                            :first_name,
 
-                'password_hash' =>
-                    $passwordHash,
+                        last_name =
+                            :last_name,
 
-                'role_id' =>
-                    $roleId
-            ]);
+                        phone =
+                            :phone,
 
+                        department_id =
+                            :department_id,
 
-            $userId =
-                (int)$pdo
-                    ->lastInsertId();
+                        manager_id =
+                            :manager_id,
 
+                        job_title =
+                            :job_title,
 
-            /*
-            |--------------------------------------------------------------------------
-            | Create Employee Record
-            |--------------------------------------------------------------------------
-            */
+                        date_joined =
+                            :date_joined
 
-            $employeeStmt =
-                $pdo->prepare(
-                    "INSERT INTO employees
-                    (
-                        user_id,
-                        employee_code,
-                        first_name,
-                        last_name,
-                        phone,
-                        department_id,
-                        manager_id,
-                        job_title,
-                        date_joined,
-                        status
-                    )
-                    VALUES
-                    (
-                        :user_id,
-                        :employee_code,
-                        :first_name,
-                        :last_name,
-                        :phone,
-                        :department_id,
-                        :manager_id,
-                        :job_title,
-                        :date_joined,
-                        'Active'
-                    )"
+                     WHERE employee_id =
+                        :employee_id"
                 );
 
 
-            $employeeStmt->execute([
-                'user_id' =>
-                    $userId,
-
+            $employeeUpdate->execute([
                 'employee_code' =>
                     $employeeCode,
 
@@ -550,7 +707,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $jobTitle,
 
                 'date_joined' =>
-                    $dateJoined
+                    $dateJoined,
+
+                'employee_id' =>
+                    $employeeId
             ]);
 
 
@@ -559,8 +719,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             setFlash(
                 'success',
-                $selectedRole['role_name']
-                . ' account created successfully.'
+                'Employee information updated successfully.'
             );
 
 
@@ -576,12 +735,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (
                 $pdo->inTransaction()
             ) {
+
                 $pdo->rollBack();
             }
 
 
             error_log(
-                'Add employee error: '
+                'Edit employee error: '
                 . $e->getMessage()
             );
 
@@ -590,9 +750,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $e instanceof
                 RuntimeException
                     ? $e->getMessage()
-                    : 'Unable to create the employee account.';
+                    : 'Unable to update the employee.';
         }
     }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Preserve Submitted Data
+    |--------------------------------------------------------------------------
+    */
+
+    $employee['employee_code'] =
+        $employeeCode;
+
+    $employee['first_name'] =
+        $firstName;
+
+    $employee['last_name'] =
+        $lastName;
+
+    $employee['email'] =
+        $email;
+
+    $employee['phone'] =
+        $phone;
+
+    $employee['department_id'] =
+        $departmentId;
+
+    $employee['role_id'] =
+        $roleId;
+
+    $employee['manager_id'] =
+        $managerId;
+
+    $employee['job_title'] =
+        $jobTitle;
+
+    $employee['date_joined'] =
+        $dateJoined;
+
+    $employee['role_name'] =
+        $selectedRole['role_name']
+        ?? $employee['role_name'];
 }
 
 
@@ -618,42 +819,37 @@ require_once __DIR__ .
         <i class="bi bi-chevron-right"></i>
 
         <span>
-            Add Employee
+            Edit
         </span>
 
     </div>
 
+
     <h2>
-        Add Employee
+        Edit Employee
     </h2>
 
     <p>
-        Create an employee profile and
-        secure ELMS login account.
+        Update employee information,
+        account access and organizational
+        assignment.
     </p>
 
 </div>
 
 
-<?php if (!$departments): ?>
-
-    <div class="alert alert-warning">
-
-        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-
-        You need at least one active department
-        before creating employees.
-
-    </div>
-
-<?php endif; ?>
-
-
 <?php if ($error !== ''): ?>
 
-    <div class="alert alert-danger">
+    <div
+        class="alert alert-danger
+               d-flex gap-2
+               align-items-center"
+    >
 
-        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <i
+            class="bi
+                   bi-exclamation-triangle-fill"
+        ></i>
 
         <?= escape($error) ?>
 
@@ -677,6 +873,8 @@ require_once __DIR__ .
 
         <div class="col-xl-8">
 
+            <!-- PERSONAL INFORMATION -->
+
             <div class="admin-card mb-4">
 
                 <div class="admin-card-header">
@@ -688,14 +886,19 @@ require_once __DIR__ .
                         </h5>
 
                         <small class="text-muted">
-                            Employee identification
-                            and contact information
+                            Identification and
+                            contact information
                         </small>
 
                     </div>
 
                     <div class="header-icon-box">
-                        <i class="bi bi-person-vcard"></i>
+
+                        <i
+                            class="bi
+                                   bi-person-vcard"
+                        ></i>
+
                     </div>
 
                 </div>
@@ -723,11 +926,10 @@ require_once __DIR__ .
                                 required
                                 class="form-control
                                        professional-input"
-                                placeholder="EMP001"
                                 value="<?= escape(
-                                    $_POST[
+                                    $employee[
                                         'employee_code'
-                                    ] ?? ''
+                                    ]
                                 ) ?>"
                             >
 
@@ -753,9 +955,9 @@ require_once __DIR__ .
                                 class="form-control
                                        professional-input"
                                 value="<?= escape(
-                                    $_POST[
+                                    $employee[
                                         'first_name'
-                                    ] ?? ''
+                                    ]
                                 ) ?>"
                             >
 
@@ -781,9 +983,9 @@ require_once __DIR__ .
                                 class="form-control
                                        professional-input"
                                 value="<?= escape(
-                                    $_POST[
+                                    $employee[
                                         'last_name'
-                                    ] ?? ''
+                                    ]
                                 ) ?>"
                             >
 
@@ -806,12 +1008,10 @@ require_once __DIR__ .
                                 name="email"
                                 maxlength="150"
                                 required
-                                autocomplete="off"
                                 class="form-control
                                        professional-input"
                                 value="<?= escape(
-                                    $_POST['email']
-                                    ?? ''
+                                    $employee['email']
                                 ) ?>"
                             >
 
@@ -833,8 +1033,9 @@ require_once __DIR__ .
                                 class="form-control
                                        professional-input"
                                 value="<?= escape(
-                                    $_POST['phone']
-                                    ?? ''
+                                    $employee[
+                                        'phone'
+                                    ] ?? ''
                                 ) ?>"
                             >
 
@@ -847,6 +1048,8 @@ require_once __DIR__ .
             </div>
 
 
+            <!-- EMPLOYMENT INFORMATION -->
+
             <div class="admin-card">
 
                 <div class="admin-card-header">
@@ -858,14 +1061,19 @@ require_once __DIR__ .
                         </h5>
 
                         <small class="text-muted">
-                            Department, role and
-                            reporting information
+                            Role, department and
+                            reporting relationship
                         </small>
 
                     </div>
 
                     <div class="header-icon-box">
-                        <i class="bi bi-building"></i>
+
+                        <i
+                            class="bi
+                                   bi-building"
+                        ></i>
+
                     </div>
 
                 </div>
@@ -893,10 +1101,6 @@ require_once __DIR__ .
                                 required
                             >
 
-                                <option value="">
-                                    Select Department
-                                </option>
-
                                 <?php foreach (
                                     $departments
                                     as $department
@@ -905,11 +1109,11 @@ require_once __DIR__ .
                                     <option
                                         value="<?= (int)$department['department_id'] ?>"
                                         <?= (
-                                            ($_POST[
+                                            (int)$employee[
                                                 'department_id'
-                                            ] ?? '')
-                                            ==
-                                            $department[
+                                            ]
+                                            ===
+                                            (int)$department[
                                                 'department_id'
                                             ]
                                         )
@@ -917,11 +1121,13 @@ require_once __DIR__ .
                                             : ''
                                         ?>
                                     >
+
                                         <?= escape(
                                             $department[
                                                 'department_name'
                                             ]
                                         ) ?>
+
                                     </option>
 
                                 <?php endforeach; ?>
@@ -950,10 +1156,6 @@ require_once __DIR__ .
                                 required
                             >
 
-                                <option value="">
-                                    Select Role
-                                </option>
-
                                 <?php foreach (
                                     $roles
                                     as $role
@@ -964,10 +1166,26 @@ require_once __DIR__ .
                                         data-role="<?= escape(
                                             $role['role_name']
                                         ) ?>"
+                                        <?= (
+                                            (int)$employee[
+                                                'role_id'
+                                            ]
+                                            ===
+                                            (int)$role[
+                                                'role_id'
+                                            ]
+                                        )
+                                            ? 'selected'
+                                            : ''
+                                        ?>
                                     >
+
                                         <?= escape(
-                                            $role['role_name']
+                                            $role[
+                                                'role_name'
+                                            ]
                                         ) ?>
+
                                     </option>
 
                                 <?php endforeach; ?>
@@ -995,11 +1213,10 @@ require_once __DIR__ .
                                 required
                                 class="form-control
                                        professional-input"
-                                placeholder="Software Engineer"
                                 value="<?= escape(
-                                    $_POST[
+                                    $employee[
                                         'job_title'
-                                    ] ?? ''
+                                    ]
                                 ) ?>"
                             >
 
@@ -1025,9 +1242,9 @@ require_once __DIR__ .
                                 class="form-control
                                        professional-input"
                                 value="<?= escape(
-                                    $_POST[
+                                    $employee[
                                         'date_joined'
-                                    ] ?? ''
+                                    ]
                                 ) ?>"
                             >
 
@@ -1063,7 +1280,22 @@ require_once __DIR__ .
 
                                     <option
                                         value="<?= (int)$manager['employee_id'] ?>"
+                                        <?= (
+                                            (int)(
+                                                $employee[
+                                                    'manager_id'
+                                                ] ?? 0
+                                            )
+                                            ===
+                                            (int)$manager[
+                                                'employee_id'
+                                            ]
+                                        )
+                                            ? 'selected'
+                                            : ''
+                                        ?>
                                     >
+
                                         <?= escape(
                                             $manager[
                                                 'first_name'
@@ -1078,15 +1310,17 @@ require_once __DIR__ .
                                             ]
                                             . ')'
                                         ) ?>
+
                                     </option>
 
                                 <?php endforeach; ?>
 
                             </select>
 
+
                             <div class="form-help">
-                                Employees must be assigned
-                                to an active Manager.
+                                Required when the
+                                account role is Employee.
                             </div>
 
                         </div>
@@ -1100,7 +1334,125 @@ require_once __DIR__ .
         </div>
 
 
+        <!-- ACCOUNT PANEL -->
+
         <div class="col-xl-4">
+
+            <div class="admin-card mb-4">
+
+                <div class="admin-card-header">
+
+                    <div>
+
+                        <h5>
+                            Account Information
+                        </h5>
+
+                        <small class="text-muted">
+                            ELMS access details
+                        </small>
+
+                    </div>
+
+                    <div class="header-icon-box">
+
+                        <i
+                            class="bi
+                                   bi-shield-check"
+                        ></i>
+
+                    </div>
+
+                </div>
+
+
+                <div class="admin-card-body">
+
+                    <div class="detail-list">
+
+                        <div class="detail-item">
+
+                            <div class="detail-icon">
+                                <i class="bi bi-person-badge"></i>
+                            </div>
+
+                            <div>
+
+                                <span>
+                                    Employee ID
+                                </span>
+
+                                <strong>
+                                    #<?= (int)$employeeId ?>
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="detail-item">
+
+                            <div class="detail-icon">
+                                <i class="bi bi-toggle-on"></i>
+                            </div>
+
+                            <div>
+
+                                <span>
+                                    Account Status
+                                </span>
+
+                                <strong>
+                                    <?= escape(
+                                        $employee[
+                                            'employee_status'
+                                        ]
+                                    ) ?>
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="detail-item">
+
+                            <div class="detail-icon">
+                                <i class="bi bi-calendar-plus"></i>
+                            </div>
+
+                            <div>
+
+                                <span>
+                                    Created
+                                </span>
+
+                                <strong>
+                                    <?= escape(
+                                        date(
+                                            'd M Y',
+                                            strtotime(
+                                                $employee[
+                                                    'created_at'
+                                                ]
+                                            )
+                                        )
+                                    ) ?>
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- PASSWORD RESET -->
 
             <div class="admin-card">
 
@@ -1109,17 +1461,19 @@ require_once __DIR__ .
                     <div>
 
                         <h5>
-                            Account Security
+                            Reset Password
                         </h5>
 
                         <small class="text-muted">
-                            Initial ELMS login credentials
+                            Optional
                         </small>
 
                     </div>
 
                     <div class="header-icon-box">
-                        <i class="bi bi-shield-lock"></i>
+
+                        <i class="bi bi-key-fill"></i>
+
                     </div>
 
                 </div>
@@ -1132,47 +1486,33 @@ require_once __DIR__ .
                         <label
                             class="professional-form-label"
                         >
-                            Temporary Password
-                            <span class="required-mark">
-                                *
-                            </span>
+                            New Password
                         </label>
 
                         <input
                             type="password"
-                            name="password"
+                            name="new_password"
                             minlength="8"
-                            required
                             autocomplete="new-password"
                             class="form-control
                                    professional-input"
                         >
 
-                        <div class="form-help">
-                            Minimum 8 characters.
-                            Passwords are securely hashed
-                            before storage.
-                        </div>
-
                     </div>
 
 
-                    <div class="mb-4">
+                    <div class="mb-3">
 
                         <label
                             class="professional-form-label"
                         >
-                            Confirm Password
-                            <span class="required-mark">
-                                *
-                            </span>
+                            Confirm New Password
                         </label>
 
                         <input
                             type="password"
                             name="confirm_password"
                             minlength="8"
-                            required
                             autocomplete="new-password"
                             class="form-control
                                    professional-input"
@@ -1184,19 +1524,18 @@ require_once __DIR__ .
                     <div class="admin-info-box">
 
                         <div class="admin-info-icon">
-                            <i class="bi bi-shield-check"></i>
+                            <i class="bi bi-lock"></i>
                         </div>
 
                         <div>
 
                             <strong>
-                                Secure Account Creation
+                                Password Security
                             </strong>
 
                             <p>
-                                Login credentials and employee
-                                records are created together
-                                using a database transaction.
+                                Leave both fields empty
+                                to keep the current password.
                             </p>
 
                         </div>
@@ -1216,14 +1555,12 @@ require_once __DIR__ .
                         <button
                             type="submit"
                             class="btn-professional-primary"
-                            <?= !$departments
-                                ? 'disabled'
-                                : ''
-                            ?>
                         >
-                            <i class="bi bi-person-plus-fill"></i>
 
-                            Create Account
+                            <i class="bi bi-check2-circle"></i>
+
+                            Save Changes
+
                         </button>
 
                     </div>
