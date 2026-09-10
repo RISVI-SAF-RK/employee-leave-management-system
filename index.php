@@ -2,43 +2,16 @@
 
 declare(strict_types=1);
 
-$appName = "Employee Leave Management System";
+require_once __DIR__ . '/includes/session.php';
+require_once __DIR__ . '/includes/functions.php';
 
-?>
-<!DOCTYPE html>
-<html lang="en">
+if (isset($_SESSION['user_id'], $_SESSION['role'])) {
 
-<head>
-    <meta charset="UTF-8">
+    redirectByRole(
+        $_SESSION['role']
+    );
+}
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+header('Location: /login.php');
 
-    <title><?= htmlspecialchars($appName) ?></title>
-
-    <link rel="stylesheet" href="assets/css/style.css">
-</head>
-
-<body>
-
-    <main class="welcome-container">
-
-        <h1>Employee Leave Management System</h1>
-
-        <p>
-            A secure and efficient web-based system for
-            managing employee leave.
-        </p>
-
-        <div class="status-box">
-            <strong>System Status:</strong>
-            Development in Progress
-        </div>
-
-    </main>
-
-    <script src="assets/js/script.js"></script>
-
-</body>
-
-</html>
+exit;
