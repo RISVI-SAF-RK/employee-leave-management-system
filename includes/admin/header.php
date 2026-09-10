@@ -233,17 +233,19 @@ $avatarLetter = strtoupper(
 </a>
 
         <a
-            href="#"
-            class="sidebar-link sidebar-link-disabled"
-        >
+    href="/admin/leave-balances.php"
+    class="sidebar-link
+    <?= $isActive([
+        'leave-balances.php',
+        'edit-leave-balance.php'
+    ]) ?>"
+>
+    <i class="bi bi-pie-chart-fill"></i>
 
-            <i class="bi bi-pie-chart-fill"></i>
-
-            <span>
-                Leave Balances
-            </span>
-
-        </a>
+    <span>
+        Leave Balances
+    </span>
+</a>
 
         <a
             href="#"
