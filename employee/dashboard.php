@@ -175,116 +175,120 @@ require_once __DIR__
 
 
 <!-- =========================================================
-     WELCOME HERO
+     PREMIUM EMPLOYEE HERO
      ========================================================= -->
 
-<section class="employee-hero">
+<section class="employee-dashboard-hero">
 
-    <div class="employee-hero-content">
+    <div class="employee-dashboard-hero-content">
 
-        <div class="employee-hero-label">
+        <div class="employee-dashboard-eyebrow">
+            <i class="bi bi-calendar2-check-fill"></i>
 
-            <i
-                class="bi
-                       bi-calendar2-check"
-            ></i>
-
-            <?= $currentYear ?>
-            Leave Management
-
+            <?= $currentYear ?> Leave Workspace
         </div>
 
 
         <h2>
-
             Welcome back,
             <?= escape(
-                $employeeProfile[
-                    'first_name'
-                ]
+                $employeeProfile['first_name']
             ) ?>
-
+            <span>👋</span>
         </h2>
 
 
         <p>
-            Manage your leave,
-            monitor your available balances
-            and track requests from one place.
+            View your leave entitlement, track usage
+            and manage your leave information from
+            one secure workspace.
         </p>
 
 
-        <div
-            class="d-flex
-                   flex-wrap
-                   gap-2
-                   mt-4"
-        >
+        <div class="employee-hero-meta">
 
-            <span
-                class="employee-hero-badge"
-            >
-
-                <i
-                    class="bi
-                           bi-person-badge"
-                ></i>
+            <span>
+                <i class="bi bi-person-badge"></i>
 
                 <?= escape(
                     $employeeProfile[
                         'employee_code'
                     ]
                 ) ?>
-
             </span>
 
 
-            <span
-                class="employee-hero-badge"
-            >
-
-                <i
-                    class="bi
-                           bi-building"
-                ></i>
+            <span>
+                <i class="bi bi-building"></i>
 
                 <?= escape(
                     $employeeProfile[
                         'department_name'
                     ]
                 ) ?>
-
             </span>
 
 
-            <span
-                class="employee-hero-badge"
-            >
-
-                <i
-                    class="bi
-                           bi-briefcase"
-                ></i>
+            <span>
+                <i class="bi bi-briefcase"></i>
 
                 <?= escape(
                     $employeeProfile[
                         'job_title'
                     ]
                 ) ?>
-
             </span>
+
+        </div>
+
+
+        <div class="employee-hero-actions">
+
+            <button
+                type="button"
+                class="employee-primary-action"
+                disabled
+                title="Leave application will be available in the next phase."
+            >
+
+                <i class="bi bi-calendar-plus-fill"></i>
+
+                Apply for Leave
+
+                <small>
+                    Coming Next
+                </small>
+
+            </button>
+
+
+            <a
+                href="/employee/my-balances.php"
+                class="employee-secondary-action"
+            >
+
+                <i class="bi bi-pie-chart-fill"></i>
+
+                View My Balances
+
+            </a>
 
         </div>
 
     </div>
 
 
-    <div class="employee-hero-decoration">
+    <div class="employee-dashboard-hero-art">
 
-        <i
-            class="bi
-                   bi-calendar2-week"
-        ></i>
+        <div class="hero-art-circle hero-art-one"></div>
+
+        <div class="hero-art-circle hero-art-two"></div>
+
+        <div class="hero-calendar-art">
+
+            <i class="bi bi-calendar2-week-fill"></i>
+
+        </div>
 
     </div>
 
@@ -292,44 +296,70 @@ require_once __DIR__
 
 
 <!-- =========================================================
-     SUMMARY CARDS
+     KPI CARDS
      ========================================================= -->
 
-<div class="row g-3 mt-1 mb-4">
+<div class="row g-4 mb-4">
 
-    <div class="col-sm-6 col-xl-4">
+    <!-- ALLOCATED -->
 
-        <div class="employee-summary-card">
+    <div class="col-md-4">
 
-            <div>
+        <div
+            class="employee-kpi-card
+                   employee-kpi-purple"
+        >
 
-                <span>
-                    Total Allocated
+            <div class="employee-kpi-top">
+
+                <div
+                    class="employee-kpi-icon"
+                >
+
+                    <i
+                        class="bi
+                               bi-calendar-plus"
+                    ></i>
+
+                </div>
+
+
+                <span
+                    class="employee-kpi-tag"
+                >
+                    <?= $currentYear ?>
                 </span>
 
-                <strong>
-                    <?= number_format(
-                        $totalAllocated,
-                        2
-                    ) ?>
-                </strong>
+            </div>
+
+
+            <span class="employee-kpi-label">
+                Total Allocated
+            </span>
+
+
+            <div class="employee-kpi-value">
+
+                <?= number_format(
+                    $totalAllocated,
+                    2
+                ) ?>
 
                 <small>
-                    days in <?= $currentYear ?>
+                    days
                 </small>
 
             </div>
 
 
-            <div
-                class="employee-summary-icon
-                       allocation"
-            >
+            <div class="employee-kpi-footer">
 
                 <i
                     class="bi
-                           bi-calendar-plus"
+                           bi-info-circle"
                 ></i>
+
+                Total yearly entitlement
 
             </div>
 
@@ -338,39 +368,65 @@ require_once __DIR__
     </div>
 
 
-    <div class="col-sm-6 col-xl-4">
+    <!-- USED -->
 
-        <div class="employee-summary-card">
+    <div class="col-md-4">
 
-            <div>
+        <div
+            class="employee-kpi-card
+                   employee-kpi-orange"
+        >
 
-                <span>
-                    Leave Used
+            <div class="employee-kpi-top">
+
+                <div
+                    class="employee-kpi-icon"
+                >
+
+                    <i
+                        class="bi
+                               bi-calendar-minus"
+                    ></i>
+
+                </div>
+
+
+                <span
+                    class="employee-kpi-tag"
+                >
+                    Used
                 </span>
 
-                <strong>
-                    <?= number_format(
-                        $totalUsed,
-                        2
-                    ) ?>
-                </strong>
+            </div>
+
+
+            <span class="employee-kpi-label">
+                Leave Used
+            </span>
+
+
+            <div class="employee-kpi-value">
+
+                <?= number_format(
+                    $totalUsed,
+                    2
+                ) ?>
 
                 <small>
-                    approved leave
+                    days
                 </small>
 
             </div>
 
 
-            <div
-                class="employee-summary-icon
-                       used"
-            >
+            <div class="employee-kpi-footer">
 
                 <i
                     class="bi
-                           bi-calendar-minus"
+                           bi-check-circle"
                 ></i>
+
+                Approved leave only
 
             </div>
 
@@ -379,39 +435,65 @@ require_once __DIR__
     </div>
 
 
-    <div class="col-sm-6 col-xl-4">
+    <!-- REMAINING -->
 
-        <div class="employee-summary-card">
+    <div class="col-md-4">
 
-            <div>
+        <div
+            class="employee-kpi-card
+                   employee-kpi-green"
+        >
 
-                <span>
-                    Total Remaining
+            <div class="employee-kpi-top">
+
+                <div
+                    class="employee-kpi-icon"
+                >
+
+                    <i
+                        class="bi
+                               bi-calendar-check"
+                    ></i>
+
+                </div>
+
+
+                <span
+                    class="employee-kpi-tag"
+                >
+                    Available
                 </span>
 
-                <strong>
-                    <?= number_format(
-                        $totalRemaining,
-                        2
-                    ) ?>
-                </strong>
+            </div>
+
+
+            <span class="employee-kpi-label">
+                Total Remaining
+            </span>
+
+
+            <div class="employee-kpi-value">
+
+                <?= number_format(
+                    $totalRemaining,
+                    2
+                ) ?>
 
                 <small>
-                    available days
+                    days
                 </small>
 
             </div>
 
 
-            <div
-                class="employee-summary-icon
-                       remaining"
-            >
+            <div class="employee-kpi-footer">
 
                 <i
                     class="bi
-                           bi-calendar-check"
+                           bi-lightning-charge"
                 ></i>
+
+                Current available balance
 
             </div>
 
@@ -422,23 +504,39 @@ require_once __DIR__
 </div>
 
 
+<!-- =========================================================
+     MAIN DASHBOARD GRID
+     ========================================================= -->
+
 <div class="row g-4">
 
-    <!-- =====================================================
-         BALANCE PREVIEW
-         ===================================================== -->
+    <!-- LEAVE BALANCES -->
 
     <div class="col-xl-8">
 
-        <div class="admin-card h-100">
+        <div
+            class="admin-card
+                   employee-dashboard-card"
+        >
 
-            <div class="admin-card-header">
+            <div
+                class="admin-card-header
+                       employee-dashboard-card-header"
+            >
 
                 <div>
+
+                    <div
+                        class="employee-section-label"
+                    >
+                        LEAVE OVERVIEW
+                    </div>
+
 
                     <h5>
                         My Leave Balances
                     </h5>
+
 
                     <small class="text-muted">
                         <?= $currentYear ?>
@@ -450,7 +548,7 @@ require_once __DIR__
 
                 <a
                     href="/employee/my-balances.php"
-                    class="employee-text-link"
+                    class="employee-view-all"
                 >
 
                     View All
@@ -469,17 +567,13 @@ require_once __DIR__
 
                 <?php if (!$balances): ?>
 
-                    <div
-                        class="employee-empty-state"
-                    >
+                    <div class="employee-empty-state">
 
-                        <div
-                            class="employee-empty-icon"
-                        >
+                        <div class="employee-empty-icon">
 
                             <i
                                 class="bi
-                                       bi-pie-chart"
+                                       bi-calendar-x"
                             ></i>
 
                         </div>
@@ -491,9 +585,9 @@ require_once __DIR__
 
 
                         <p>
-                            Your leave balances have not
-                            been initialized for
-                            <?= $currentYear ?> yet.
+                            Your <?= $currentYear ?>
+                            leave balances have not
+                            been initialized yet.
                         </p>
 
                     </div>
@@ -501,11 +595,11 @@ require_once __DIR__
 
                 <?php else: ?>
 
-
                     <div class="row g-3">
 
                         <?php foreach (
-                            $balances as $balance
+                            $balances
+                            as $balance
                         ): ?>
 
                             <?php
@@ -526,13 +620,12 @@ require_once __DIR__
                                 ];
 
 
-                            $percentage =
+                            $usagePercentage =
                                 $allocated > 0
                                     ? min(
                                         100,
                                         (
-                                            $used
-                                            /
+                                            $used /
                                             $allocated
                                         ) * 100
                                     )
@@ -541,21 +634,36 @@ require_once __DIR__
                             ?>
 
 
-                            <div class="col-md-6">
+                            <div class="col-lg-6">
 
                                 <div
-                                    class="employee-balance-card"
+                                    class="premium-balance-card"
                                 >
 
                                     <div
-                                        class="employee-balance-top"
+                                        class="premium-balance-header"
                                     >
 
-                                        <div>
+                                        <div
+                                            class="premium-leave-icon"
+                                        >
+
+                                            <i
+                                                class="bi
+                                                       bi-calendar-event"
+                                            ></i>
+
+                                        </div>
+
+
+                                        <div
+                                            class="premium-leave-name"
+                                        >
 
                                             <span>
                                                 Leave Type
                                             </span>
+
 
                                             <strong>
 
@@ -570,14 +678,61 @@ require_once __DIR__
                                         </div>
 
 
-                                        <div
-                                            class="employee-balance-icon"
+                                        <span
+                                            class="premium-payment-badge"
                                         >
 
-                                            <i
-                                                class="bi
-                                                       bi-calendar-event"
-                                            ></i>
+                                            <?= (int)$balance[
+                                                'is_paid'
+                                            ] === 1
+                                                ? 'Paid'
+                                                : 'Unpaid'
+                                            ?>
+
+                                        </span>
+
+                                    </div>
+
+
+                                    <div
+                                        class="premium-balance-main"
+                                    >
+
+                                        <div>
+
+                                            <span>
+                                                Available Balance
+                                            </span>
+
+
+                                            <strong>
+
+                                                <?= number_format(
+                                                    $remaining,
+                                                    2
+                                                ) ?>
+
+                                                <small>
+                                                    days
+                                                </small>
+
+                                            </strong>
+
+                                        </div>
+
+
+                                        <div
+                                            class="premium-balance-percent"
+                                        >
+
+                                            <?= number_format(
+                                                $usagePercentage,
+                                                0
+                                            ) ?>%
+
+                                            <span>
+                                                used
+                                            </span>
 
                                         </div>
 
@@ -585,29 +740,13 @@ require_once __DIR__
 
 
                                     <div
-                                        class="employee-balance-number"
-                                    >
-
-                                        <?= number_format(
-                                            $remaining,
-                                            2
-                                        ) ?>
-
-                                        <small>
-                                            days left
-                                        </small>
-
-                                    </div>
-
-
-                                    <div
-                                        class="employee-balance-progress"
+                                        class="premium-progress"
                                     >
 
                                         <div
                                             style="width:
                                             <?= number_format(
-                                                $percentage,
+                                                $usagePercentage,
                                                 2,
                                                 '.',
                                                 ''
@@ -618,29 +757,57 @@ require_once __DIR__
 
 
                                     <div
-                                        class="employee-balance-footer"
+                                        class="premium-balance-stats"
                                     >
 
-                                        <span>
-                                            Used
-                                            <strong>
-                                                <?= number_format(
-                                                    $used,
-                                                    2
-                                                ) ?>
-                                            </strong>
-                                        </span>
+                                        <div>
 
+                                            <span>
+                                                Allocated
+                                            </span>
 
-                                        <span>
-                                            Allocated
                                             <strong>
                                                 <?= number_format(
                                                     $allocated,
                                                     2
                                                 ) ?>
                                             </strong>
-                                        </span>
+
+                                        </div>
+
+
+                                        <div>
+
+                                            <span>
+                                                Used
+                                            </span>
+
+                                            <strong>
+                                                <?= number_format(
+                                                    $used,
+                                                    2
+                                                ) ?>
+                                            </strong>
+
+                                        </div>
+
+
+                                        <div>
+
+                                            <span>
+                                                Remaining
+                                            </span>
+
+                                            <strong
+                                                class="remaining-value"
+                                            >
+                                                <?= number_format(
+                                                    $remaining,
+                                                    2
+                                                ) ?>
+                                            </strong>
+
+                                        </div>
 
                                     </div>
 
@@ -662,33 +829,52 @@ require_once __DIR__
 
 
     <!-- =====================================================
-         EMPLOYEE INFORMATION
+         RIGHT SIDEBAR INFORMATION
          ===================================================== -->
 
     <div class="col-xl-4">
 
-        <div class="admin-card h-100">
+        <!-- EMPLOYMENT DETAILS -->
 
-            <div class="admin-card-header">
+        <div
+            class="admin-card
+                   employee-dashboard-card
+                   mb-4"
+        >
+
+            <div
+                class="admin-card-header
+                       employee-dashboard-card-header"
+            >
 
                 <div>
+
+                    <div
+                        class="employee-section-label"
+                    >
+                        MY PROFILE
+                    </div>
+
 
                     <h5>
                         Employment Details
                     </h5>
 
+
                     <small class="text-muted">
-                        Your current information
+                        Current work information
                     </small>
 
                 </div>
 
 
-                <div class="header-icon-box">
+                <div
+                    class="header-icon-box"
+                >
 
                     <i
                         class="bi
-                               bi-person-vcard"
+                               bi-person-vcard-fill"
                     ></i>
 
                 </div>
@@ -698,11 +884,19 @@ require_once __DIR__
 
             <div class="admin-card-body">
 
-                <div class="detail-list">
+                <div
+                    class="premium-profile-list"
+                >
 
-                    <div class="detail-item">
+                    <!-- EMPLOYEE CODE -->
 
-                        <div class="detail-icon">
+                    <div
+                        class="premium-profile-item"
+                    >
+
+                        <div
+                            class="premium-profile-icon"
+                        >
 
                             <i
                                 class="bi
@@ -733,9 +927,15 @@ require_once __DIR__
                     </div>
 
 
-                    <div class="detail-item">
+                    <!-- DEPARTMENT -->
 
-                        <div class="detail-icon">
+                    <div
+                        class="premium-profile-item"
+                    >
+
+                        <div
+                            class="premium-profile-icon"
+                        >
 
                             <i
                                 class="bi
@@ -766,9 +966,15 @@ require_once __DIR__
                     </div>
 
 
-                    <div class="detail-item">
+                    <!-- JOB TITLE -->
 
-                        <div class="detail-icon">
+                    <div
+                        class="premium-profile-item"
+                    >
+
+                        <div
+                            class="premium-profile-icon"
+                        >
 
                             <i
                                 class="bi
@@ -799,9 +1005,15 @@ require_once __DIR__
                     </div>
 
 
-                    <div class="detail-item">
+                    <!-- MANAGER -->
 
-                        <div class="detail-icon">
+                    <div
+                        class="premium-profile-item"
+                    >
+
+                        <div
+                            class="premium-profile-icon"
+                        >
 
                             <i
                                 class="bi
@@ -839,13 +1051,19 @@ require_once __DIR__
                     </div>
 
 
-                    <div class="detail-item">
+                    <!-- DATE JOINED -->
 
-                        <div class="detail-icon">
+                    <div
+                        class="premium-profile-item"
+                    >
+
+                        <div
+                            class="premium-profile-icon"
+                        >
 
                             <i
                                 class="bi
-                                       bi-calendar-plus"
+                                       bi-calendar-check"
                             ></i>
 
                         </div>
@@ -873,6 +1091,154 @@ require_once __DIR__
                             </strong>
 
                         </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- QUICK ACTIONS -->
+
+        <div
+            class="admin-card
+                   employee-dashboard-card"
+        >
+
+            <div class="admin-card-header">
+
+                <div>
+
+                    <div
+                        class="employee-section-label"
+                    >
+                        SHORTCUTS
+                    </div>
+
+                    <h5>
+                        Quick Actions
+                    </h5>
+
+                </div>
+
+            </div>
+
+
+            <div class="admin-card-body">
+
+                <div
+                    class="employee-quick-actions"
+                >
+
+                    <a
+                        href="/employee/my-balances.php"
+                        class="employee-quick-action"
+                    >
+
+                        <div>
+
+                            <i
+                                class="bi
+                                       bi-pie-chart-fill"
+                            ></i>
+
+                        </div>
+
+
+                        <span>
+
+                            <strong>
+                                My Balances
+                            </strong>
+
+                            <small>
+                                View leave entitlement
+                            </small>
+
+                        </span>
+
+
+                        <i
+                            class="bi
+                                   bi-chevron-right"
+                        ></i>
+
+                    </a>
+
+
+                    <div
+                        class="employee-quick-action
+                               employee-quick-action-disabled"
+                    >
+
+                        <div>
+
+                            <i
+                                class="bi
+                                       bi-calendar-plus-fill"
+                            ></i>
+
+                        </div>
+
+
+                        <span>
+
+                            <strong>
+                                Apply for Leave
+                            </strong>
+
+                            <small>
+                                Available next
+                            </small>
+
+                        </span>
+
+
+                        <span
+                            class="employee-coming-badge"
+                        >
+                            NEXT
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        class="employee-quick-action
+                               employee-quick-action-disabled"
+                    >
+
+                        <div>
+
+                            <i
+                                class="bi
+                                       bi-clock-history"
+                            ></i>
+
+                        </div>
+
+
+                        <span>
+
+                            <strong>
+                                Leave History
+                            </strong>
+
+                            <small>
+                                Track your requests
+                            </small>
+
+                        </span>
+
+
+                        <span
+                            class="employee-coming-badge"
+                        >
+                            SOON
+                        </span>
 
                     </div>
 
