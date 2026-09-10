@@ -2622,3 +2622,751 @@ input:checked
     }
 
 }
+/* =========================================================
+   EMPLOYEE PORTAL
+   ========================================================= */
+
+.employee-sidebar {
+    background:
+        linear-gradient(
+            180deg,
+            #172554 0%,
+            #0f172a 100%
+        );
+}
+
+
+/* =========================================================
+   EMPLOYEE HERO
+   ========================================================= */
+
+.employee-hero {
+    position: relative;
+
+    min-height: 230px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    overflow: hidden;
+
+    margin-bottom: 24px;
+
+    padding:
+        clamp(26px, 4vw, 42px);
+
+    border-radius: 20px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #4338ca 0%,
+            #6366f1 50%,
+            #7c3aed 100%
+        );
+
+    color: white;
+
+    box-shadow:
+        0 18px 45px
+        rgba(79, 70, 229, 0.20);
+}
+
+
+.employee-hero-content {
+    position: relative;
+
+    z-index: 2;
+
+    max-width: 700px;
+}
+
+
+.employee-hero-label {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 7px;
+
+    margin-bottom: 17px;
+
+    padding:
+        7px
+        11px;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.18);
+
+    border-radius: 999px;
+
+    background:
+        rgba(255, 255, 255, 0.10);
+
+    font-size: 11px;
+    font-weight: 650;
+}
+
+
+.employee-hero h2 {
+    margin-bottom: 10px;
+
+    font-size:
+        clamp(
+            25px,
+            4vw,
+            36px
+        );
+
+    font-weight: 750;
+}
+
+
+.employee-hero p {
+    max-width: 570px;
+
+    margin: 0;
+
+    color:
+        rgba(
+            255,
+            255,
+            255,
+            0.80
+        );
+
+    font-size: 14px;
+
+    line-height: 1.7;
+}
+
+
+.employee-hero-badge {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 7px;
+
+    padding:
+        7px
+        10px;
+
+    border-radius: 8px;
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.12
+        );
+
+    color:
+        rgba(
+            255,
+            255,
+            255,
+            0.92
+        );
+
+    font-size: 11px;
+}
+
+
+.employee-hero-decoration {
+    position: absolute;
+
+    right: 55px;
+
+    top: 50%;
+
+    transform:
+        translateY(-50%)
+        rotate(-8deg);
+
+    color:
+        rgba(
+            255,
+            255,
+            255,
+            0.10
+        );
+
+    font-size: 145px;
+}
+
+
+/* =========================================================
+   EMPLOYEE SUMMARY
+   ========================================================= */
+
+.employee-summary-card {
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 21px;
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius: 15px;
+
+    background: white;
+
+    box-shadow:
+        var(--shadow-sm);
+
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
+}
+
+
+.employee-summary-card:hover {
+    transform:
+        translateY(-2px);
+
+    box-shadow:
+        var(--shadow-md);
+}
+
+
+.employee-summary-card
+> div:first-child {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.employee-summary-card span {
+    margin-bottom: 6px;
+
+    color:
+        var(--text-secondary);
+
+    font-size: 11px;
+    font-weight: 600;
+}
+
+
+.employee-summary-card strong {
+    color: #0f172a;
+
+    font-size: 27px;
+    font-weight: 750;
+}
+
+
+.employee-summary-card small {
+    margin-top: 2px;
+
+    color: #94a3b8;
+
+    font-size: 10px;
+}
+
+
+.employee-summary-icon {
+    width: 48px;
+    height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 13px;
+
+    font-size: 19px;
+}
+
+
+.employee-summary-icon.allocation {
+    color: #4f46e5;
+    background: #eef2ff;
+}
+
+
+.employee-summary-icon.used {
+    color: #d97706;
+    background: #fef3c7;
+}
+
+
+.employee-summary-icon.remaining {
+    color: #15803d;
+    background: #dcfce7;
+}
+
+
+/* =========================================================
+   EMPLOYEE BALANCE CARD
+   ========================================================= */
+
+.employee-balance-card {
+    height: 100%;
+
+    padding: 18px;
+
+    border:
+        1px solid
+        #e8edf4;
+
+    border-radius: 14px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff,
+            #fafbff
+        );
+
+    transition:
+        transform 0.2s,
+        border-color 0.2s,
+        box-shadow 0.2s;
+}
+
+
+.employee-balance-card:hover {
+    transform:
+        translateY(-2px);
+
+    border-color:
+        #c7d2fe;
+
+    box-shadow:
+        0 10px 25px
+        rgba(15, 23, 42, 0.06);
+}
+
+
+.employee-balance-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+}
+
+
+.employee-balance-top
+> div:first-child {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.employee-balance-top span {
+    margin-bottom: 3px;
+
+    color: #94a3b8;
+
+    font-size: 9px;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.05em;
+}
+
+
+.employee-balance-top strong {
+    color: #334155;
+
+    font-size: 13px;
+}
+
+
+.employee-balance-icon {
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 10px;
+
+    background: #eef2ff;
+
+    color: #4f46e5;
+
+    font-size: 17px;
+}
+
+
+.employee-balance-number {
+    margin:
+        22px
+        0
+        14px;
+
+    color: #1e293b;
+
+    font-size: 28px;
+    font-weight: 750;
+}
+
+
+.employee-balance-number small {
+    color: #94a3b8;
+
+    font-size: 10px;
+    font-weight: 500;
+}
+
+
+.employee-balance-progress {
+    width: 100%;
+    height: 7px;
+
+    overflow: hidden;
+
+    border-radius: 999px;
+
+    background: #e2e8f0;
+}
+
+
+.employee-balance-progress > div {
+    height: 100%;
+
+    border-radius: inherit;
+
+    background:
+        linear-gradient(
+            90deg,
+            #6366f1,
+            #8b5cf6
+        );
+}
+
+
+.employee-balance-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    margin-top: 11px;
+}
+
+
+.employee-balance-footer span {
+    color: #94a3b8;
+
+    font-size: 9px;
+}
+
+
+.employee-balance-footer strong {
+    margin-left: 3px;
+
+    color: #475569;
+
+    font-size: 10px;
+}
+
+
+.employee-text-link {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 5px;
+
+    color:
+        var(--primary);
+
+    font-size: 11px;
+    font-weight: 650;
+
+    text-decoration: none;
+}
+
+
+.employee-text-link:hover {
+    color:
+        var(--primary-dark);
+}
+
+
+/* =========================================================
+   LARGE BALANCE CARD
+   ========================================================= */
+
+.employee-balance-large-card {
+    height: 100%;
+
+    padding: 22px;
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius: 16px;
+
+    background: white;
+
+    box-shadow:
+        var(--shadow-sm);
+
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
+}
+
+
+.employee-balance-large-card:hover {
+    transform:
+        translateY(-3px);
+
+    box-shadow:
+        var(--shadow-md);
+}
+
+
+.employee-balance-large-header {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+}
+
+
+.employee-balance-large-header h5 {
+    margin:
+        0
+        0
+        3px;
+
+    color: #1e293b;
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+
+.employee-balance-large-header span {
+    color: #94a3b8;
+
+    font-size: 10px;
+}
+
+
+.employee-remaining-display {
+    margin:
+        26px
+        0
+        17px;
+
+    display: flex;
+    align-items: baseline;
+
+    gap: 7px;
+}
+
+
+.employee-remaining-display strong {
+    color: #15803d;
+
+    font-size: 32px;
+    font-weight: 800;
+}
+
+
+.employee-remaining-display span {
+    color: #94a3b8;
+
+    font-size: 10px;
+}
+
+
+.employee-balance-stat-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 8px;
+
+    margin-top: 18px;
+}
+
+
+.employee-balance-stat-grid
+> div {
+    padding: 10px;
+
+    border-radius: 9px;
+
+    background: #f8fafc;
+
+    text-align: center;
+}
+
+
+.employee-balance-stat-grid span {
+    display: block;
+
+    margin-bottom: 3px;
+
+    color: #94a3b8;
+
+    font-size: 8px;
+
+    text-transform: uppercase;
+}
+
+
+.employee-balance-stat-grid strong {
+    color: #334155;
+
+    font-size: 13px;
+}
+
+
+.employee-balance-description {
+    margin:
+        15px
+        0
+        0;
+
+    padding-top: 14px;
+
+    border-top:
+        1px solid #f1f5f9;
+
+    color: #64748b;
+
+    font-size: 10px;
+
+    line-height: 1.6;
+}
+
+
+/* =========================================================
+   EMPLOYEE EMPTY STATE
+   ========================================================= */
+
+.employee-empty-state {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+
+    padding:
+        35px
+        20px;
+
+    text-align: center;
+}
+
+
+.employee-empty-icon {
+    width: 58px;
+    height: 58px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 14px;
+
+    border-radius: 16px;
+
+    background: #f1f5f9;
+
+    color: #94a3b8;
+
+    font-size: 23px;
+}
+
+
+.employee-empty-state h5,
+.employee-empty-state h6 {
+    margin-bottom: 6px;
+
+    color: #334155;
+
+    font-weight: 700;
+}
+
+
+.employee-empty-state p {
+    max-width: 390px;
+
+    margin: 0;
+
+    color: #94a3b8;
+
+    font-size: 11px;
+
+    line-height: 1.6;
+}
+
+
+/* =========================================================
+   EMPLOYEE RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 767.98px) {
+
+    .employee-hero {
+        min-height: 210px;
+
+        padding:
+            26px
+            22px;
+    }
+
+
+    .employee-hero-decoration {
+        right: -15px;
+
+        font-size: 110px;
+    }
+
+
+    .employee-hero-content {
+        max-width: 90%;
+    }
+
+
+    .employee-balance-stat-grid {
+        grid-template-columns:
+            repeat(3, 1fr);
+    }
+
+}
+
+
+@media (max-width: 480px) {
+
+    .employee-hero-badge {
+        font-size: 9px;
+    }
+
+
+    .employee-balance-stat-grid {
+        gap: 5px;
+    }
+
+
+    .employee-balance-stat-grid
+    > div {
+        padding:
+            9px
+            4px;
+    }
+
+}
