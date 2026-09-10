@@ -182,22 +182,20 @@ $avatarLetter = strtoupper(
         </a>
 
         <a
-            href="#"
-            class="sidebar-link sidebar-link-disabled"
-        >
+    href="/admin/employees.php"
+    class="sidebar-link
+    <?= $isActive([
+        'employees.php',
+        'add-employee.php',
+        'edit-employee.php'
+    ]) ?>"
+>
+    <i class="bi bi-people-fill"></i>
 
-            <i class="bi bi-people-fill"></i>
-
-            <span>
-                Employees
-            </span>
-
-            <small>
-                Soon
-            </small>
-
-        </a>
-
+    <span>
+        Employees
+    </span>
+</a>
 
         <div class="nav-section-title">
             Leave Management

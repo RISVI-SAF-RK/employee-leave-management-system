@@ -1644,3 +1644,163 @@ textarea.professional-input {
     }
 
 }
+
+/* =========================================================
+   EMPLOYEE MANAGEMENT
+   ========================================================= */
+
+.employee-cell {
+    min-width: 260px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+}
+
+
+.employee-avatar {
+    width: 42px;
+    height: 42px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #eef2ff,
+            #e0e7ff
+        );
+
+    color: #4f46e5;
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+
+.employee-info {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+}
+
+
+.employee-info strong {
+    color: #1e293b;
+
+    font-size: 13px;
+    font-weight: 650;
+}
+
+
+.employee-info span {
+    max-width: 280px;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    margin-top: 2px;
+
+    color: #64748b;
+
+    font-size: 11px;
+}
+
+
+.employee-info small {
+    margin-top: 2px;
+
+    color: #94a3b8;
+
+    font-size: 10px;
+}
+
+
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 5px;
+
+    padding: 6px 9px;
+
+    border-radius: 999px;
+
+    font-size: 11px;
+    font-weight: 650;
+}
+
+
+.role-manager {
+    background: #ede9fe;
+    color: #6d28d9;
+}
+
+
+.role-employee {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    padding: 25px;
+}
+
+
+.empty-state > i {
+    margin-bottom: 12px;
+
+    color: #cbd5e1;
+
+    font-size: 38px;
+}
+
+
+.empty-state h6 {
+    margin-bottom: 5px;
+
+    color: #334155;
+
+    font-weight: 650;
+}
+
+
+.empty-state p {
+    margin: 0;
+
+    color: #94a3b8;
+
+    font-size: 12px;
+}
+
+
+.form-select.professional-input {
+    padding:
+        10px
+        36px
+        10px
+        13px;
+}
+
+
+@media (max-width: 767.98px) {
+
+    .employee-cell {
+        min-width: 220px;
+    }
+
+}
