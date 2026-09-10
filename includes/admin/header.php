@@ -218,17 +218,19 @@ $avatarLetter = strtoupper(
 </a>
 
         <a
-            href="#"
-            class="sidebar-link sidebar-link-disabled"
-        >
+    href="/admin/leave-policies.php"
+    class="sidebar-link
+    <?= $isActive([
+        'leave-policies.php',
+        'configure-leave-policy.php'
+    ]) ?>"
+>
+    <i class="bi bi-file-earmark-text-fill"></i>
 
-            <i class="bi bi-file-earmark-text-fill"></i>
-
-            <span>
-                Leave Policies
-            </span>
-
-        </a>
+    <span>
+        Leave Policies
+    </span>
+</a>
 
         <a
             href="#"

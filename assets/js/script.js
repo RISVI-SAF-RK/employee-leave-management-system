@@ -172,5 +172,92 @@ document.addEventListener(
             );
 
         }
+    
+/*
+==========================================================
+Leave Policy Carry Forward
+==========================================================
+*/
+
+const carryForwardRadios =
+    document.querySelectorAll(
+        'input[name="carry_forward_allowed"]'
+    );
+
+const carryForwardLimit =
+    document.getElementById(
+        'carryForwardLimit'
+    );
+
+const maxCarryForwardInput =
+    document.getElementById(
+        'max_carry_forward_days'
+    );
+
+
+function updateCarryForwardField() {
+
+    if (
+        !carryForwardLimit ||
+        carryForwardRadios.length === 0
+    ) {
+        return;
     }
+
+
+    const selected =
+        document.querySelector(
+            'input[name="carry_forward_allowed"]:checked'
+        );
+
+
+    const carryForwardEnabled =
+        selected !== null
+        &&
+        selected.value === '1';
+
+
+    if (carryForwardEnabled) {
+
+        carryForwardLimit.style.display =
+            '';
+
+        if (maxCarryForwardInput) {
+
+            maxCarryForwardInput.required =
+                true;
+        }
+
+    } else {
+
+        carryForwardLimit.style.display =
+            'none';
+
+
+        if (maxCarryForwardInput) {
+
+            maxCarryForwardInput.required =
+                false;
+
+            maxCarryForwardInput.value =
+                '0';
+        }
+
+    }
+}
+
+
+carryForwardRadios.forEach(
+    function (radio) {
+
+        radio.addEventListener(
+            'change',
+            updateCarryForwardField
+        );
+
+    }
+);
+
+
+updateCarryForwardField();}
 );
