@@ -2,7 +2,8 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ .
+    '/../config/database.php';
 
 $pageTitle = 'Dashboard';
 
@@ -16,6 +17,7 @@ try {
         )
         ->fetchColumn();
 
+
     $departmentCount = (int)$pdo
         ->query(
             "SELECT COUNT(*)
@@ -24,6 +26,7 @@ try {
         )
         ->fetchColumn();
 
+
     $pendingLeaveCount = (int)$pdo
         ->query(
             "SELECT COUNT(*)
@@ -31,6 +34,7 @@ try {
              WHERE status = 'Pending'"
         )
         ->fetchColumn();
+
 
     $leaveTypeCount = (int)$pdo
         ->query(
@@ -53,33 +57,332 @@ try {
     $leaveTypeCount = 0;
 }
 
+
 require_once __DIR__ .
     '/../includes/admin/header.php';
 ?>
 
-<h2 class="mb-4">
-    Administrator Dashboard
-</h2>
 
-<p class="text-muted">
-    Overview of the Employee Leave Management System.
-</p>
+<div class="page-heading">
 
-<div class="row g-4 mt-2">
+    <h2>
+        Welcome back, Administrator
+    </h2>
 
-    <div class="col-md-6 col-xl-3">
+    <p>
+        Here's an overview of your Employee
+        Leave Management System.
+    </p>
 
-        <div class="card shadow-sm border-0">
+</div>
 
-            <div class="card-body">
 
-                <h6 class="text-muted">
-                    Active Employees
-                </h6>
+<div class="row g-4">
 
-                <h2>
-                    <?= $employeeCount ?>
-                </h2>
+    <div class="col-sm-6 col-xl-3">
+
+        <div class="dashboard-stat-card">
+
+            <div class="stat-card-top">
+
+                <div>
+
+                    <div class="stat-label">
+                        Active Employees
+                    </div>
+
+                    <h3 class="stat-value">
+                        <?= $employeeCount ?>
+                    </h3>
+
+                </div>
+
+                <div
+                    class="stat-icon
+                           stat-icon-purple"
+                >
+                    <i class="bi bi-people-fill"></i>
+                </div>
+
+            </div>
+
+            <div class="stat-footer">
+                Currently active employees
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-sm-6 col-xl-3">
+
+        <div class="dashboard-stat-card">
+
+            <div class="stat-card-top">
+
+                <div>
+
+                    <div class="stat-label">
+                        Departments
+                    </div>
+
+                    <h3 class="stat-value">
+                        <?= $departmentCount ?>
+                    </h3>
+
+                </div>
+
+                <div
+                    class="stat-icon
+                           stat-icon-blue"
+                >
+                    <i class="bi bi-diagram-3-fill"></i>
+                </div>
+
+            </div>
+
+            <div class="stat-footer">
+                Active departments
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-sm-6 col-xl-3">
+
+        <div class="dashboard-stat-card">
+
+            <div class="stat-card-top">
+
+                <div>
+
+                    <div class="stat-label">
+                        Pending Requests
+                    </div>
+
+                    <h3 class="stat-value">
+                        <?= $pendingLeaveCount ?>
+                    </h3>
+
+                </div>
+
+                <div
+                    class="stat-icon
+                           stat-icon-orange"
+                >
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+
+            </div>
+
+            <div class="stat-footer">
+                Awaiting manager action
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-sm-6 col-xl-3">
+
+        <div class="dashboard-stat-card">
+
+            <div class="stat-card-top">
+
+                <div>
+
+                    <div class="stat-label">
+                        Active Leave Types
+                    </div>
+
+                    <h3 class="stat-value">
+                        <?= $leaveTypeCount ?>
+                    </h3>
+
+                </div>
+
+                <div
+                    class="stat-icon
+                           stat-icon-green"
+                >
+                    <i class="bi bi-calendar-check-fill"></i>
+                </div>
+
+            </div>
+
+            <div class="stat-footer">
+                Available leave categories
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="row g-4 mt-1">
+
+    <div class="col-xl-8">
+
+        <div class="admin-card h-100">
+
+            <div class="admin-card-header">
+
+                <div>
+
+                    <h5>
+                        System Overview
+                    </h5>
+
+                    <small class="text-muted">
+                        Current ELMS administration status
+                    </small>
+
+                </div>
+
+                <span
+                    class="badge
+                           rounded-pill
+                           text-bg-success"
+                >
+                    System Online
+                </span>
+
+            </div>
+
+            <div class="admin-card-body">
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+
+                        <div class="quick-action">
+
+                            <div class="quick-action-icon">
+
+                                <i
+                                    class="bi
+                                           bi-shield-check"
+                                ></i>
+
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Secure Access
+                                </strong>
+
+                                <span>
+                                    Role-based authentication
+                                    is enabled
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6">
+
+                        <div class="quick-action">
+
+                            <div class="quick-action-icon">
+
+                                <i
+                                    class="bi
+                                           bi-database-check"
+                                ></i>
+
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Cloud Database
+                                </strong>
+
+                                <span>
+                                    Railway MySQL is
+                                    connected
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6">
+
+                        <div class="quick-action">
+
+                            <div class="quick-action-icon">
+
+                                <i
+                                    class="bi
+                                           bi-person-check"
+                                ></i>
+
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Administrator
+                                </strong>
+
+                                <span>
+                                    Administration account
+                                    is active
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-6">
+
+                        <div class="quick-action">
+
+                            <div class="quick-action-icon">
+
+                                <i
+                                    class="bi
+                                           bi-cloud-check"
+                                ></i>
+
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Online Deployment
+                                </strong>
+
+                                <span>
+                                    ELMS is running
+                                    in the cloud
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
 
             </div>
 
@@ -87,59 +390,119 @@ require_once __DIR__ .
 
     </div>
 
-    <div class="col-md-6 col-xl-3">
 
-        <div class="card shadow-sm border-0">
+    <div class="col-xl-4">
 
-            <div class="card-body">
+        <div class="admin-card h-100">
 
-                <h6 class="text-muted">
-                    Departments
-                </h6>
+            <div class="admin-card-header">
 
-                <h2>
-                    <?= $departmentCount ?>
-                </h2>
+                <div>
 
-            </div>
+                    <h5>
+                        Quick Actions
+                    </h5>
 
-        </div>
+                    <small class="text-muted">
+                        Common administration tasks
+                    </small>
 
-    </div>
-
-    <div class="col-md-6 col-xl-3">
-
-        <div class="card shadow-sm border-0">
-
-            <div class="card-body">
-
-                <h6 class="text-muted">
-                    Pending Leave Requests
-                </h6>
-
-                <h2>
-                    <?= $pendingLeaveCount ?>
-                </h2>
+                </div>
 
             </div>
 
-        </div>
+            <div class="admin-card-body">
 
-    </div>
+                <div class="d-grid gap-3">
 
-    <div class="col-md-6 col-xl-3">
+                    <a
+                        href="/admin/departments.php"
+                        class="quick-action"
+                    >
 
-        <div class="card shadow-sm border-0">
+                        <div class="quick-action-icon">
 
-            <div class="card-body">
+                            <i
+                                class="bi
+                                       bi-diagram-3"
+                            ></i>
 
-                <h6 class="text-muted">
-                    Active Leave Types
-                </h6>
+                        </div>
 
-                <h2>
-                    <?= $leaveTypeCount ?>
-                </h2>
+                        <div>
+
+                            <strong>
+                                Manage Departments
+                            </strong>
+
+                            <span>
+                                Add and maintain
+                                departments
+                            </span>
+
+                        </div>
+
+                    </a>
+
+
+                    <div
+                        class="quick-action"
+                        style="opacity: 0.6;"
+                    >
+
+                        <div class="quick-action-icon">
+
+                            <i
+                                class="bi
+                                       bi-person-plus"
+                            ></i>
+
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Add Employee
+                            </strong>
+
+                            <span>
+                                Coming in the next phase
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="quick-action"
+                        style="opacity: 0.6;"
+                    >
+
+                        <div class="quick-action-icon">
+
+                            <i
+                                class="bi
+                                       bi-calendar-plus"
+                            ></i>
+
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Leave Policies
+                            </strong>
+
+                            <span>
+                                Coming soon
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
 
             </div>
 
@@ -149,23 +512,6 @@ require_once __DIR__ .
 
 </div>
 
-<div class="card border-0 shadow-sm mt-4">
-
-    <div class="card-body">
-
-        <h5>
-            Welcome to ELMS Administration
-        </h5>
-
-        <p class="mb-0 text-muted">
-            Use the navigation menu to manage
-            employees, departments, leave policies
-            and other system information.
-        </p>
-
-    </div>
-
-</div>
 
 <?php
 

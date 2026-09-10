@@ -10,6 +10,29 @@ requireRole('Administrator');
 $pageTitle = $pageTitle ?? 'Administrator';
 
 $flash = getFlash();
+
+$currentPage = basename(
+    $_SERVER['PHP_SELF']
+);
+
+$isActive = static function (
+    array $pages
+) use ($currentPage): string {
+
+    return in_array(
+        $currentPage,
+        $pages,
+        true
+    )
+        ? 'active'
+        : '';
+};
+
+$email = $_SESSION['email'] ?? 'Administrator';
+
+$avatarLetter = strtoupper(
+    substr($email, 0, 1)
+);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -34,6 +57,11 @@ $flash = getFlash();
 
     <link
         rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
+    >
+
+    <link
+        rel="stylesheet"
         href="/assets/css/style.css"
     >
 
@@ -41,96 +69,319 @@ $flash = getFlash();
 
 <body class="admin-body">
 
-<nav class="navbar navbar-dark bg-dark">
+<div
+    class="sidebar-overlay"
+    id="sidebarOverlay"
+></div>
 
-    <div class="container-fluid">
+
+<aside
+    class="admin-sidebar"
+    id="adminSidebar"
+>
+
+    <div class="sidebar-header">
 
         <a
-            class="navbar-brand"
             href="/admin/dashboard.php"
+            class="brand"
         >
-            ELMS Administration
+
+            <div class="brand-icon">
+                <i class="bi bi-calendar2-check-fill"></i>
+            </div>
+
+            <div class="brand-text">
+
+                <span class="brand-title">
+                    ELMS
+                </span>
+
+                <span class="brand-subtitle">
+                    Administration
+                </span>
+
+            </div>
+
         </a>
 
-        <div class="d-flex align-items-center text-white">
+        <button
+            type="button"
+            class="sidebar-close"
+            id="sidebarClose"
+            aria-label="Close navigation"
+        >
+            <i class="bi bi-x-lg"></i>
+        </button>
 
-            <span class="me-3">
-                <?= escape(
-                    $_SESSION['email'] ?? ''
-                ) ?>
+    </div>
+
+
+    <div class="sidebar-user">
+
+        <div class="sidebar-avatar">
+            <?= escape($avatarLetter) ?>
+        </div>
+
+        <div class="sidebar-user-details">
+
+            <span class="sidebar-user-role">
+                Administrator
             </span>
 
-            <a
-                href="/logout.php"
-                class="btn btn-outline-light btn-sm"
-            >
-                Logout
-            </a>
+            <span class="sidebar-user-email">
+                <?= escape($email) ?>
+            </span>
 
         </div>
 
     </div>
 
-</nav>
 
-<div class="container-fluid">
+    <nav class="sidebar-nav">
 
-    <div class="row">
+        <div class="nav-section-title">
+            Main
+        </div>
 
-        <aside
-            class="col-md-2 admin-sidebar py-4"
+        <a
+            href="/admin/dashboard.php"
+            class="sidebar-link
+            <?= $isActive(['dashboard.php']) ?>"
         >
 
-            <a href="/admin/dashboard.php">
+            <i class="bi bi-grid-1x2-fill"></i>
+
+            <span>
                 Dashboard
-            </a>
+            </span>
 
-            <a href="/admin/departments.php">
-                Departments
-            </a>
+        </a>
 
-            <a href="#">
-                Employees
-            </a>
 
-            <a href="#">
-                Leave Types
-            </a>
+        <div class="nav-section-title">
+            Organization
+        </div>
 
-            <a href="#">
-                Leave Policies
-            </a>
-
-            <a href="#">
-                Leave Balances
-            </a>
-
-            <a href="#">
-                Leave Records
-            </a>
-
-            <a href="#">
-                Reports
-            </a>
-
-        </aside>
-
-        <main
-            class="col-md-10 ms-sm-auto px-md-4 py-4"
+        <a
+            href="/admin/departments.php"
+            class="sidebar-link
+            <?= $isActive([
+                'departments.php',
+                'add-department.php',
+                'edit-department.php'
+            ]) ?>"
         >
 
-            <?php if ($flash): ?>
+            <i class="bi bi-diagram-3-fill"></i>
 
-                <div
-                    class="alert alert-<?= escape(
-                        $flash['type']
-                    ) ?>"
-                >
+            <span>
+                Departments
+            </span>
 
-                    <?= escape(
-                        $flash['message']
-                    ) ?>
+        </a>
+
+        <a
+            href="#"
+            class="sidebar-link sidebar-link-disabled"
+        >
+
+            <i class="bi bi-people-fill"></i>
+
+            <span>
+                Employees
+            </span>
+
+            <small>
+                Soon
+            </small>
+
+        </a>
+
+
+        <div class="nav-section-title">
+            Leave Management
+        </div>
+
+        <a
+            href="#"
+            class="sidebar-link sidebar-link-disabled"
+        >
+
+            <i class="bi bi-calendar-event-fill"></i>
+
+            <span>
+                Leave Types
+            </span>
+
+        </a>
+
+        <a
+            href="#"
+            class="sidebar-link sidebar-link-disabled"
+        >
+
+            <i class="bi bi-file-earmark-text-fill"></i>
+
+            <span>
+                Leave Policies
+            </span>
+
+        </a>
+
+        <a
+            href="#"
+            class="sidebar-link sidebar-link-disabled"
+        >
+
+            <i class="bi bi-pie-chart-fill"></i>
+
+            <span>
+                Leave Balances
+            </span>
+
+        </a>
+
+        <a
+            href="#"
+            class="sidebar-link sidebar-link-disabled"
+        >
+
+            <i class="bi bi-journal-check"></i>
+
+            <span>
+                Leave Records
+            </span>
+
+        </a>
+
+
+        <div class="nav-section-title">
+            Analytics
+        </div>
+
+        <a
+            href="#"
+            class="sidebar-link sidebar-link-disabled"
+        >
+
+            <i class="bi bi-bar-chart-fill"></i>
+
+            <span>
+                Reports
+            </span>
+
+        </a>
+
+    </nav>
+
+
+    <div class="sidebar-footer">
+
+        <a
+            href="/logout.php"
+            class="logout-link"
+        >
+
+            <i class="bi bi-box-arrow-right"></i>
+
+            <span>
+                Sign Out
+            </span>
+
+        </a>
+
+    </div>
+
+</aside>
+
+
+<div class="admin-main">
+
+    <header class="admin-topbar">
+
+        <div class="topbar-left">
+
+            <button
+                type="button"
+                class="mobile-menu-button"
+                id="mobileMenuButton"
+                aria-label="Open navigation"
+            >
+                <i class="bi bi-list"></i>
+            </button>
+
+            <div>
+
+                <div class="topbar-label">
+                    Employee Leave Management System
+                </div>
+
+                <h1 class="topbar-title">
+                    <?= escape($pageTitle) ?>
+                </h1>
+
+            </div>
+
+        </div>
+
+
+        <div class="topbar-right">
+
+            <button
+                type="button"
+                class="topbar-icon-button"
+                aria-label="Notifications"
+            >
+                <i class="bi bi-bell"></i>
+            </button>
+
+            <div class="topbar-profile">
+
+                <div class="topbar-avatar">
+                    <?= escape($avatarLetter) ?>
+                </div>
+
+                <div class="topbar-profile-text">
+
+                    <strong>
+                        Administrator
+                    </strong>
+
+                    <span>
+                        <?= escape($email) ?>
+                    </span>
 
                 </div>
 
-            <?php endif; ?>
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <main class="admin-content">
+
+        <?php if ($flash): ?>
+
+            <div
+                class="alert alert-<?= escape(
+                    $flash['type']
+                ) ?> alert-dismissible fade show shadow-sm"
+                role="alert"
+            >
+
+                <?= escape(
+                    $flash['message']
+                ) ?>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                ></button>
+
+            </div>
+
+        <?php endif; ?>

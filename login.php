@@ -123,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 </head>
 
-<body>
+<body class="auth-page">
 
 <div class="login-container">
 
