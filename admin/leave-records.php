@@ -177,21 +177,13 @@ if ($leaveTypeId) {
 if ($search !== '') {
 
     $where[] =
-        "(
-            e.employee_code LIKE :search
-
-            OR e.first_name LIKE :search
-
-            OR e.last_name LIKE :search
-
-            OR CONCAT(
-                e.first_name,
-                ' ',
-                e.last_name
-            ) LIKE :search
-
-            OR u.email LIKE :search
-        )";
+        "CONCAT_WS(
+            ' ',
+            e.employee_code,
+            e.first_name,
+            e.last_name,
+            u.email
+        ) LIKE :search";
 
     $params['search'] =
         '%' . $search . '%';
