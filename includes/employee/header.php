@@ -4,12 +4,36 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../role_check.php';
 require_once __DIR__ . '/../functions.php';
+require_once __DIR__ . '/../../config/database.php';
 
 requireRole('Employee');
 
 $pageTitle = $pageTitle ?? 'Employee Portal';
 
 $flash = getFlash();
+
+/*
+|--------------------------------------------------------------------------
+| Unread Notification Count
+|--------------------------------------------------------------------------
+*/
+
+$notificationCountStmt =
+    $pdo->prepare(
+        "SELECT COUNT(*)
+         FROM notifications
+         WHERE user_id = :user_id
+           AND is_read = FALSE"
+    );
+
+$notificationCountStmt->execute([
+    'user_id' =>
+        (int)$_SESSION['user_id']
+]);
+
+$unreadNotificationCount =
+    (int)$notificationCountStmt
+        ->fetchColumn();
 
 $currentPage = basename(
     $_SERVER['PHP_SELF']
@@ -296,21 +320,33 @@ $avatarLetter = strtoupper(
 
 
         <a
-            href="#"
-            class="sidebar-link
-                   sidebar-link-disabled"
+    href="/employee/notifications.php"
+    class="sidebar-link
+    <?= $isActive([
+        'notifications.php'
+    ]) ?>"
+>
+    <i class="bi bi-bell-fill"></i>
+
+    <span>
+        Notifications
+    </span>
+
+    <?php if (
+        $unreadNotificationCount > 0
+    ): ?>
+
+        <span
+            class="sidebar-notification-count"
         >
+            <?= $unreadNotificationCount > 99
+                ? '99+'
+                : $unreadNotificationCount
+            ?>
+        </span>
 
-            <i
-                class="bi
-                       bi-bell-fill"
-            ></i>
-
-            <span>
-                Notifications
-            </span>
-
-        </a>
+    <?php endif; ?>
+</a>
 
 
         <a
@@ -400,15 +436,29 @@ $avatarLetter = strtoupper(
 
         <div class="topbar-right">
 
-            <button
-                type="button"
-                class="topbar-icon-button"
-                aria-label="Notifications"
-            >
+            <a
+    href="/employee/notifications.php"
+    class="topbar-icon-button
+           topbar-notification-button"
+    aria-label="Notifications"
+>
+    <i class="bi bi-bell"></i>
 
-                <i class="bi bi-bell"></i>
+    <?php if (
+        $unreadNotificationCount > 0
+    ): ?>
 
-            </button>
+        <span
+            class="topbar-notification-badge"
+        >
+            <?= $unreadNotificationCount > 99
+                ? '99+'
+                : $unreadNotificationCount
+            ?>
+        </span>
+
+    <?php endif; ?>
+</a>
 
 
             <div class="topbar-profile">
