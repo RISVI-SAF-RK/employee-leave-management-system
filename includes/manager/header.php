@@ -292,25 +292,19 @@ $avatarLetter =
 
 
         <a
-            href="#"
-            class="sidebar-link
-                   sidebar-link-disabled"
-        >
+    href="/manager/my-team.php"
+    class="sidebar-link
+    <?= $isActive([
+        'my-team.php',
+        'view-team-member.php'
+    ]) ?>"
+>
+    <i class="bi bi-people-fill"></i>
 
-            <i
-                class="bi
-                       bi-people-fill"
-            ></i>
-
-            <span>
-                My Team
-            </span>
-
-            <small>
-                Soon
-            </small>
-
-        </a>
+    <span>
+        My Team
+    </span>
+</a>
 
 
         <a
