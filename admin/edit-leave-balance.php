@@ -129,10 +129,24 @@ if (!$balance) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+    /*
+    |--------------------------------------------------------------------------
+    | CSRF
+    |--------------------------------------------------------------------------
+    */
+
+    $csrfToken =
+        $_POST['csrf_token']
+        ?? null;
+
+
     if (
+        !is_string(
+            $csrfToken
+        )
+        ||
         !verifyCsrfToken(
-            $_POST['csrf_token']
-            ?? null
+            $csrfToken
         )
     ) {
 
@@ -144,10 +158,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
 
-    $allocatedRaw = trim(
+    /*
+    |--------------------------------------------------------------------------
+    | Input
+    |--------------------------------------------------------------------------
+    */
+
+    $allocatedInput =
         $_POST['allocated_days']
-        ?? ''
-    );
+        ?? '';
+
+
+    $allocatedRaw =
+        is_string(
+            $allocatedInput
+        )
+            ? trim(
+                $allocatedInput
+            )
+            : '';
 
 
     $allocatedDays =
@@ -157,11 +186,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
 
 
-    $usedDays =
-        (float)$balance[
-            'used_days'
-        ];
-
+    /*
+    |--------------------------------------------------------------------------
+    | Basic Validation
+    |--------------------------------------------------------------------------
+    */
 
     if (
         $allocatedDays === false
@@ -174,109 +203,215 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error =
             'Allocated days must be between 0 and 999.99.';
 
-    } elseif (
-        $allocatedDays < $usedDays
-    ) {
-
-        $error =
-            'Allocated days cannot be lower than the already used leave amount.';
-
     } else {
 
         try {
 
-            $remainingDays =
-                round(
-                    $allocatedDays
-                    -
-                    $usedDays,
-                    2
-                );
+            /*
+            |--------------------------------------------------------------------------
+            | Transaction
+            |--------------------------------------------------------------------------
+            |
+            | Re-read and lock the balance before changing it. This prevents a
+            | Manager approval happening at the same time from making the
+            | remaining balance inconsistent.
+            |
+            */
+
+            $pdo->beginTransaction();
 
 
-            $updateStmt =
+            $lockStmt =
                 $pdo->prepare(
-                    "UPDATE leave_balances
+                    "SELECT
+                        lb.balance_id,
+                        lb.employee_id,
+                        lb.leave_type_id,
+                        lb.balance_year,
+                        lb.allocated_days,
+                        lb.used_days,
+                        lb.remaining_days,
 
-                     SET
-                        allocated_days =
-                            :allocated_days,
+                        e.employee_code,
+                        e.first_name,
+                        e.last_name,
+                        e.job_title,
 
-                        remaining_days =
-                            :remaining_days
+                        d.department_name,
 
-                     WHERE balance_id =
-                        :balance_id"
+                        lt.leave_type_name
+
+                     FROM leave_balances lb
+
+                     INNER JOIN employees e
+                        ON lb.employee_id =
+                           e.employee_id
+
+                     INNER JOIN departments d
+                        ON e.department_id =
+                           d.department_id
+
+                     INNER JOIN leave_types lt
+                        ON lb.leave_type_id =
+                           lt.leave_type_id
+
+                     WHERE lb.balance_id =
+                        :balance_id
+
+                     LIMIT 1
+
+                     FOR UPDATE"
                 );
 
 
-            $updateStmt->execute([
-
-                'allocated_days' =>
-                    $allocatedDays,
-
-                'remaining_days' =>
-                    $remainingDays,
-
+            $lockStmt->execute([
                 'balance_id' =>
                     $balanceId
             ]);
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | Audit Leave Balance Adjustment
-            |--------------------------------------------------------------------------
-            */
+            $lockedBalance =
+                $lockStmt->fetch();
 
-            logAudit(
-                $pdo,
-                'LEAVE_BALANCE_ADJUSTED',
-                'leave_balance',
-                (int)$balanceId,
-                'Administrator changed '
-                . $balance[
-                    'leave_type_name'
-                ]
-                . ' allocation for '
-                . $balance[
-                    'employee_code'
-                ]
-                . ' from '
-                . number_format(
-                    (float)$balance[
+
+            if (!$lockedBalance) {
+
+                throw new RuntimeException(
+                    'Leave balance not found.'
+                );
+            }
+
+
+            $usedDays =
+                (float)$lockedBalance[
+                    'used_days'
+                ];
+
+
+            if (
+                $allocatedDays < $usedDays
+            ) {
+
+                $pdo->rollBack();
+
+
+                $balance =
+                    $lockedBalance;
+
+
+                $error =
+                    'Allocated days cannot be lower than the already used leave amount.';
+
+            } else {
+
+                $remainingDays =
+                    round(
+                        $allocatedDays
+                        -
+                        $usedDays,
+                        2
+                    );
+
+
+                $updateStmt =
+                    $pdo->prepare(
+                        "UPDATE leave_balances
+
+                         SET
+                            allocated_days =
+                                :allocated_days,
+
+                            remaining_days =
+                                :remaining_days
+
+                         WHERE balance_id =
+                            :balance_id"
+                    );
+
+
+                $updateStmt->execute([
+
+                    'allocated_days' =>
+                        $allocatedDays,
+
+                    'remaining_days' =>
+                        $remainingDays,
+
+                    'balance_id' =>
+                        $balanceId
+                ]);
+
+
+                $oldAllocatedDays =
+                    (float)$lockedBalance[
                         'allocated_days'
-                    ],
-                    2
-                )
-                . ' to '
-                . number_format(
-                    (float)$allocatedDays,
-                    2
-                )
-                . ' day(s).'
-            );
+                    ];
 
 
-            setFlash(
-                'success',
-                'Leave balance adjusted successfully.'
-            );
+                $pdo->commit();
 
 
-            header(
-                'Location: /admin/leave-balances.php?year='
-                . urlencode(
-                    (string)$balance[
-                        'balance_year'
+                /*
+                |--------------------------------------------------------------------------
+                | Audit Leave Balance Adjustment
+                |--------------------------------------------------------------------------
+                */
+
+                logAudit(
+                    $pdo,
+                    'LEAVE_BALANCE_ADJUSTED',
+                    'leave_balance',
+                    (int)$balanceId,
+                    'Administrator changed '
+                    . $lockedBalance[
+                        'leave_type_name'
                     ]
-                )
-            );
+                    . ' allocation for '
+                    . $lockedBalance[
+                        'employee_code'
+                    ]
+                    . ' from '
+                    . number_format(
+                        $oldAllocatedDays,
+                        2
+                    )
+                    . ' to '
+                    . number_format(
+                        (float)$allocatedDays,
+                        2
+                    )
+                    . ' day(s).'
+                );
 
-            exit;
+
+                setFlash(
+                    'success',
+                    'Leave balance adjusted successfully.'
+                );
+
+
+                header(
+                    'Location: /admin/leave-balances.php?year='
+                    . urlencode(
+                        (string)$lockedBalance[
+                            'balance_year'
+                        ]
+                    )
+                );
+
+                exit;
+            }
 
 
         } catch (Throwable $e) {
+
+            if (
+                $pdo->inTransaction()
+            ) {
+
+                $pdo->rollBack();
+            }
+
 
             error_log(
                 'Balance adjustment error: '
@@ -285,7 +420,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
             $error =
-                'Unable to adjust the leave balance.';
+                $e instanceof RuntimeException
+                    ? $e->getMessage()
+                    : 'Unable to adjust the leave balance.';
         }
     }
 }
