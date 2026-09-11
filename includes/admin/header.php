@@ -182,103 +182,138 @@ $avatarLetter = strtoupper(
         </a>
 
         <a
-    href="/admin/employees.php"
-    class="sidebar-link
-    <?= $isActive([
-        'employees.php',
-        'add-employee.php',
-        'edit-employee.php'
-    ]) ?>"
->
-    <i class="bi bi-people-fill"></i>
+            href="/admin/employees.php"
+            class="sidebar-link
+            <?= $isActive([
+                'employees.php',
+                'add-employee.php',
+                'edit-employee.php'
+            ]) ?>"
+        >
 
-    <span>
-        Employees
-    </span>
-</a>
+            <i class="bi bi-people-fill"></i>
+
+            <span>
+                Employees
+            </span>
+
+        </a>
+
 
         <div class="nav-section-title">
             Leave Management
         </div>
 
         <a
-    href="/admin/leave-types.php"
-    class="sidebar-link
-    <?= $isActive([
-        'leave-types.php',
-        'add-leave-type.php',
-        'edit-leave-type.php'
-    ]) ?>"
->
-    <i class="bi bi-calendar-event-fill"></i>
+            href="/admin/leave-types.php"
+            class="sidebar-link
+            <?= $isActive([
+                'leave-types.php',
+                'add-leave-type.php',
+                'edit-leave-type.php'
+            ]) ?>"
+        >
 
-    <span>
-        Leave Types
-    </span>
-</a>
+            <i class="bi bi-calendar-event-fill"></i>
 
-        <a
-    href="/admin/leave-policies.php"
-    class="sidebar-link
-    <?= $isActive([
-        'leave-policies.php',
-        'configure-leave-policy.php'
-    ]) ?>"
->
-    <i class="bi bi-file-earmark-text-fill"></i>
+            <span>
+                Leave Types
+            </span>
 
-    <span>
-        Leave Policies
-    </span>
-</a>
+        </a>
 
         <a
-    href="/admin/leave-balances.php"
-    class="sidebar-link
-    <?= $isActive([
-        'leave-balances.php',
-        'edit-leave-balance.php'
-    ]) ?>"
->
-    <i class="bi bi-pie-chart-fill"></i>
+            href="/admin/leave-policies.php"
+            class="sidebar-link
+            <?= $isActive([
+                'leave-policies.php',
+                'configure-leave-policy.php'
+            ]) ?>"
+        >
 
-    <span>
-        Leave Balances
-    </span>
-</a>
+            <i class="bi bi-file-earmark-text-fill"></i>
+
+            <span>
+                Leave Policies
+            </span>
+
+        </a>
 
         <a
-    href="/admin/leave-records.php"
-    class="sidebar-link
-    <?= $isActive([
-        'leave-records.php',
-        'view-leave-record.php'
-    ]) ?>"
->
-    <i class="bi bi-journal-check"></i>
+            href="/admin/leave-balances.php"
+            class="sidebar-link
+            <?= $isActive([
+                'leave-balances.php',
+                'edit-leave-balance.php'
+            ]) ?>"
+        >
 
-    <span>
-        Leave Records
-    </span>
-</a>
+            <i class="bi bi-pie-chart-fill"></i>
+
+            <span>
+                Leave Balances
+            </span>
+
+        </a>
+
+        <a
+            href="/admin/leave-records.php"
+            class="sidebar-link
+            <?= $isActive([
+                'leave-records.php',
+                'view-leave-record.php'
+            ]) ?>"
+        >
+
+            <i class="bi bi-journal-check"></i>
+
+            <span>
+                Leave Records
+            </span>
+
+        </a>
+
 
         <div class="nav-section-title">
             Analytics
         </div>
 
         <a
-    href="/admin/reports.php"
-    class="sidebar-link
-    <?= $isActive([
-        'reports.php'
-    ]) ?>"
->
-    <i class="bi bi-bar-chart-fill"></i>
+            href="/admin/reports.php"
+            class="sidebar-link
+            <?= $isActive([
+                'reports.php'
+            ]) ?>"
+        >
 
-    <span>
-        Reports
-    </span>
-</a>
+            <i class="bi bi-bar-chart-fill"></i>
+
+            <span>
+                Reports
+            </span>
+
+        </a>
+
+
+        <div class="nav-section-title">
+            Security
+        </div>
+
+        <a
+            href="/admin/audit-logs.php"
+            class="sidebar-link
+            <?= $isActive([
+                'audit-logs.php'
+            ]) ?>"
+        >
+
+            <i class="bi bi-journal-text"></i>
+
+            <span>
+                Audit Logs
+            </span>
+
+        </a>
 
     </nav>
 
