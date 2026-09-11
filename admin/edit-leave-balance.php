@@ -223,6 +223,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | Audit Leave Balance Adjustment
+            |--------------------------------------------------------------------------
+            */
+
+            logAudit(
+                $pdo,
+                'LEAVE_BALANCE_ADJUSTED',
+                'leave_balance',
+                (int)$balanceId,
+                'Administrator changed '
+                . $balance[
+                    'leave_type_name'
+                ]
+                . ' allocation for '
+                . $balance[
+                    'employee_code'
+                ]
+                . ' from '
+                . number_format(
+                    (float)$balance[
+                        'allocated_days'
+                    ],
+                    2
+                )
+                . ' to '
+                . number_format(
+                    (float)$allocatedDays,
+                    2
+                )
+                . ' day(s).'
+            );
+
+
             setFlash(
                 'success',
                 'Leave balance adjusted successfully.'
