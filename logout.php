@@ -2,13 +2,64 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/includes/session.php';
+require_once __DIR__
+    . '/includes/session.php';
+
+require_once __DIR__
+    . '/includes/functions.php';
+
+require_once __DIR__
+    . '/config/database.php';
+
+
+/*
+|--------------------------------------------------------------------------
+| Record Logout Before Destroying Session
+|--------------------------------------------------------------------------
+*/
+
+if (
+    isset(
+        $_SESSION['user_id']
+    )
+) {
+
+    logAudit(
+        $pdo,
+        'LOGOUT',
+        'user',
+        (int)$_SESSION[
+            'user_id'
+        ],
+        'User signed out of ELMS.'
+    );
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Clear Session Data
+|--------------------------------------------------------------------------
+*/
 
 $_SESSION = [];
 
-if (ini_get('session.use_cookies')) {
 
-    $params = session_get_cookie_params();
+/*
+|--------------------------------------------------------------------------
+| Delete Session Cookie
+|--------------------------------------------------------------------------
+*/
+
+if (
+    ini_get(
+        'session.use_cookies'
+    )
+) {
+
+    $params =
+        session_get_cookie_params();
+
 
     setcookie(
         session_name(),
@@ -21,8 +72,24 @@ if (ini_get('session.use_cookies')) {
     );
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| Destroy Session
+|--------------------------------------------------------------------------
+*/
+
 session_destroy();
 
-header('Location: /login.php');
+
+/*
+|--------------------------------------------------------------------------
+| Return To Login
+|--------------------------------------------------------------------------
+*/
+
+header(
+    'Location: /login.php'
+);
 
 exit;
