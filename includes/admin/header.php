@@ -248,18 +248,19 @@ $avatarLetter = strtoupper(
 </a>
 
         <a
-            href="#"
-            class="sidebar-link sidebar-link-disabled"
-        >
+    href="/admin/leave-records.php"
+    class="sidebar-link
+    <?= $isActive([
+        'leave-records.php',
+        'view-leave-record.php'
+    ]) ?>"
+>
+    <i class="bi bi-journal-check"></i>
 
-            <i class="bi bi-journal-check"></i>
-
-            <span>
-                Leave Records
-            </span>
-
-        </a>
-
+    <span>
+        Leave Records
+    </span>
+</a>
 
         <div class="nav-section-title">
             Analytics
