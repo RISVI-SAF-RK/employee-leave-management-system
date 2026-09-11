@@ -179,84 +179,279 @@ $managers = $managerStmt->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+    /*
+    |--------------------------------------------------------------------------
+    | CSRF
+    |--------------------------------------------------------------------------
+    */
+
+    $csrfToken =
+        $_POST['csrf_token']
+        ?? null;
+
+
     if (
+        !is_string(
+            $csrfToken
+        )
+        ||
         !verifyCsrfToken(
-            $_POST['csrf_token'] ?? null
+            $csrfToken
         )
     ) {
 
         http_response_code(403);
 
-        exit('Invalid security token.');
+        exit(
+            'Invalid security token.'
+        );
     }
 
 
-    $employeeCode = strtoupper(
-        trim(
-            $_POST['employee_code']
-            ?? ''
-        )
-    );
+    /*
+    |--------------------------------------------------------------------------
+    | Normalize Scalar Inputs
+    |--------------------------------------------------------------------------
+    |
+    | Do not use raw POST values directly with trim(), strtolower(), or
+    | password functions because a malformed array value could otherwise
+    | cause a TypeError when strict_types is enabled.
+    |
+    */
 
-    $firstName = trim(
+    $employeeCodeInput =
+        $_POST['employee_code']
+        ?? '';
+
+
+    $employeeCode =
+        is_string(
+            $employeeCodeInput
+        )
+            ? strtoupper(
+                trim(
+                    $employeeCodeInput
+                )
+            )
+            : '';
+
+
+    $firstNameInput =
         $_POST['first_name']
-        ?? ''
-    );
+        ?? '';
 
-    $lastName = trim(
-        $_POST['last_name']
-        ?? ''
-    );
 
-    $email = strtolower(
-        trim(
-            $_POST['email']
-            ?? ''
+    $firstName =
+        is_string(
+            $firstNameInput
         )
-    );
+            ? trim(
+                $firstNameInput
+            )
+            : '';
 
-    $phone = trim(
+
+    $lastNameInput =
+        $_POST['last_name']
+        ?? '';
+
+
+    $lastName =
+        is_string(
+            $lastNameInput
+        )
+            ? trim(
+                $lastNameInput
+            )
+            : '';
+
+
+    $emailInput =
+        $_POST['email']
+        ?? '';
+
+
+    $email =
+        is_string(
+            $emailInput
+        )
+            ? strtolower(
+                trim(
+                    $emailInput
+                )
+            )
+            : '';
+
+
+    $phoneInput =
         $_POST['phone']
-        ?? ''
-    );
+        ?? '';
 
-    $jobTitle = trim(
+
+    $phone =
+        is_string(
+            $phoneInput
+        )
+            ? trim(
+                $phoneInput
+            )
+            : '';
+
+
+    $jobTitleInput =
         $_POST['job_title']
-        ?? ''
-    );
+        ?? '';
 
-    $dateJoined =
+
+    $jobTitle =
+        is_string(
+            $jobTitleInput
+        )
+            ? trim(
+                $jobTitleInput
+            )
+            : '';
+
+
+    $dateJoinedInput =
         $_POST['date_joined']
         ?? '';
 
+
+    $dateJoined =
+        is_string(
+            $dateJoinedInput
+        )
+            ? trim(
+                $dateJoinedInput
+            )
+            : '';
+
+
+    $departmentInput =
+        $_POST['department_id']
+        ?? '';
+
+
     $departmentId =
-        filter_var(
-            $_POST['department_id']
-            ?? null,
-            FILTER_VALIDATE_INT
-        );
+        is_string(
+            $departmentInput
+        )
+            ? filter_var(
+                $departmentInput,
+                FILTER_VALIDATE_INT
+            )
+            : false;
+
+
+    $roleInput =
+        $_POST['role_id']
+        ?? '';
+
 
     $roleId =
-        filter_var(
-            $_POST['role_id']
-            ?? null,
-            FILTER_VALIDATE_INT
-        );
+        is_string(
+            $roleInput
+        )
+            ? filter_var(
+                $roleInput,
+                FILTER_VALIDATE_INT
+            )
+            : false;
+
+
+    $managerInput =
+        $_POST['manager_id']
+        ?? '';
+
 
     $managerId =
-        filter_var(
-            $_POST['manager_id']
-            ?? null,
-            FILTER_VALIDATE_INT
-        );
+        is_string(
+            $managerInput
+        )
+        &&
+        trim(
+            $managerInput
+        ) !== ''
+            ? filter_var(
+                trim(
+                    $managerInput
+                ),
+                FILTER_VALIDATE_INT
+            )
+            : null;
 
-    $newPassword =
+
+    $newPasswordInput =
         $_POST['new_password']
         ?? '';
 
-    $confirmPassword =
+
+    $newPassword =
+        is_string(
+            $newPasswordInput
+        )
+            ? $newPasswordInput
+            : '';
+
+
+    $confirmPasswordInput =
         $_POST['confirm_password']
         ?? '';
+
+
+    $confirmPassword =
+        is_string(
+            $confirmPasswordInput
+        )
+            ? $confirmPasswordInput
+            : '';
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Exact Date Validation
+    |--------------------------------------------------------------------------
+    */
+
+    $dateJoinedObject =
+        DateTimeImmutable::createFromFormat(
+            '!Y-m-d',
+            $dateJoined
+        );
+
+
+    $dateJoinedErrors =
+        DateTimeImmutable::getLastErrors();
+
+
+    $dateJoinedIsValid =
+        $dateJoinedObject
+        instanceof DateTimeImmutable
+        &&
+        $dateJoinedObject->format(
+            'Y-m-d'
+        ) === $dateJoined
+        &&
+        (
+            $dateJoinedErrors === false
+            ||
+            (
+                (
+                    $dateJoinedErrors[
+                        'warning_count'
+                    ]
+                    ?? 0
+                ) === 0
+                &&
+                (
+                    $dateJoinedErrors[
+                        'error_count'
+                    ]
+                    ?? 0
+                ) === 0
+            )
+        );
 
 
     /*
@@ -266,18 +461,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     */
 
     if (
-        $employeeCode === '' ||
-        $firstName === '' ||
-        $lastName === '' ||
-        $email === '' ||
-        $jobTitle === '' ||
-        $dateJoined === '' ||
-        !$departmentId ||
+        $employeeCode === ''
+        ||
+        $firstName === ''
+        ||
+        $lastName === ''
+        ||
+        $email === ''
+        ||
+        $jobTitle === ''
+        ||
+        $dateJoined === ''
+        ||
+        !$departmentId
+        ||
         !$roleId
     ) {
 
         $error =
             'Please complete all required fields.';
+
+    } elseif (
+        strlen(
+            $employeeCode
+        ) > 30
+        ||
+        strlen(
+            $firstName
+        ) > 100
+        ||
+        strlen(
+            $lastName
+        ) > 100
+        ||
+        strlen(
+            $email
+        ) > 150
+        ||
+        strlen(
+            $phone
+        ) > 20
+        ||
+        strlen(
+            $jobTitle
+        ) > 100
+    ) {
+
+        $error =
+            'One or more fields exceed the allowed length.';
 
     } elseif (
         !filter_var(
@@ -290,7 +521,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'Please enter a valid email address.';
 
     } elseif (
-        strtotime($dateJoined) > time()
+        !$dateJoinedIsValid
+    ) {
+
+        $error =
+            'Please enter a valid date joined.';
+
+    } elseif (
+        $dateJoinedObject
+        >
+        new DateTimeImmutable(
+            'today'
+        )
     ) {
 
         $error =
@@ -299,11 +541,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (
         $newPassword !== ''
         &&
-        strlen($newPassword) < 8
+        strlen(
+            $newPassword
+        ) < 8
     ) {
 
         $error =
             'New password must contain at least 8 characters.';
+
+    } elseif (
+        strlen(
+            $newPassword
+        ) > 255
+    ) {
+
+        $error =
+            'New password cannot exceed 255 characters.';
 
     } elseif (
         $newPassword !==
