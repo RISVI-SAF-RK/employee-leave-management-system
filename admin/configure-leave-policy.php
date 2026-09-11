@@ -489,6 +489,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
 
 
+                $policyId =
+                    (int)$policy[
+                        'policy_id'
+                    ];
+
+
+                $policyAuditAction =
+                    'LEAVE_POLICY_UPDATED';
+
+
                 $successMessage =
                     'Leave policy updated successfully.';
 
@@ -554,9 +564,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
 
 
+                $policyId =
+                    (int)$pdo
+                        ->lastInsertId();
+
+
+                $policyAuditAction =
+                    'LEAVE_POLICY_CREATED';
+
+
                 $successMessage =
                     'Leave policy configured successfully.';
             }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Audit Leave Policy Save
+            |--------------------------------------------------------------------------
+            */
+
+            logAudit(
+                $pdo,
+                $policyAuditAction,
+                'leave_policy',
+                $policyId,
+                (
+                    $policyAuditAction
+                    === 'LEAVE_POLICY_CREATED'
+                        ? 'Created'
+                        : 'Updated'
+                )
+                . ' policy for '
+                . $leaveType[
+                    'leave_type_name'
+                ]
+                . ': '
+                . number_format(
+                    (float)$daysPerYear,
+                    2
+                )
+                . ' day(s) per year, status '
+                . $formData['status']
+                . '.'
+            );
 
 
             /*

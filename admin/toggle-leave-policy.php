@@ -17,11 +17,14 @@ requireRole('Administrator');
 
 /*
 |--------------------------------------------------------------------------
-| Only POST requests
+| Only POST Requests
 |--------------------------------------------------------------------------
 */
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+if (
+    $_SERVER['REQUEST_METHOD']
+    !== 'POST'
+) {
 
     header(
         'Location: /admin/leave-policies.php'
@@ -33,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 /*
 |--------------------------------------------------------------------------
-| CSRF
+| CSRF Validation
 |--------------------------------------------------------------------------
 */
 
@@ -58,11 +61,12 @@ if (
 |--------------------------------------------------------------------------
 */
 
-$policyId = filter_input(
-    INPUT_POST,
-    'policy_id',
-    FILTER_VALIDATE_INT
-);
+$policyId =
+    filter_input(
+        INPUT_POST,
+        'policy_id',
+        FILTER_VALIDATE_INT
+    );
 
 
 if (!$policyId) {
@@ -71,6 +75,7 @@ if (!$policyId) {
         'danger',
         'Invalid leave policy selected.'
     );
+
 
     header(
         'Location: /admin/leave-policies.php'
@@ -82,21 +87,34 @@ if (!$policyId) {
 
 /*
 |--------------------------------------------------------------------------
-| Change Status
+| Change Policy Status
 |--------------------------------------------------------------------------
 */
 
 try {
 
+    /*
+    |--------------------------------------------------------------------------
+    | Load Policy + Leave Type
+    |--------------------------------------------------------------------------
+    */
+
     $stmt =
         $pdo->prepare(
             "SELECT
-                policy_id,
-                status
+                lp.policy_id,
+                lp.leave_type_id,
+                lp.status,
 
-             FROM leave_policies
+                lt.leave_type_name
 
-             WHERE policy_id =
+             FROM leave_policies lp
+
+             INNER JOIN leave_types lt
+                ON lp.leave_type_id =
+                   lt.leave_type_id
+
+             WHERE lp.policy_id =
                 :policy_id
 
              LIMIT 1"
@@ -121,12 +139,27 @@ try {
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | Determine New Status
+    |--------------------------------------------------------------------------
+    */
+
+    $oldStatus =
+        $policy['status'];
+
+
     $newStatus =
-        $policy['status']
-        === 'Active'
+        $oldStatus === 'Active'
             ? 'Inactive'
             : 'Active';
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Update Policy Status
+    |--------------------------------------------------------------------------
+    */
 
     $updateStmt =
         $pdo->prepare(
@@ -150,10 +183,41 @@ try {
     ]);
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | Audit Policy Status Change
+    |--------------------------------------------------------------------------
+    */
+
+    logAudit(
+        $pdo,
+        'LEAVE_POLICY_STATUS_CHANGED',
+        'leave_policy',
+        (int)$policyId,
+        'Changed policy for '
+        . $policy[
+            'leave_type_name'
+        ]
+        . ' status from '
+        . $oldStatus
+        . ' to '
+        . $newStatus
+        . '.'
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Success
+    |--------------------------------------------------------------------------
+    */
+
     setFlash(
         'success',
         'Leave policy '
-        . strtolower($newStatus)
+        . strtolower(
+            $newStatus
+        )
         . ' successfully.'
     );
 
@@ -174,6 +238,12 @@ try {
     );
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| Redirect
+|--------------------------------------------------------------------------
+*/
 
 header(
     'Location: /admin/leave-policies.php'
