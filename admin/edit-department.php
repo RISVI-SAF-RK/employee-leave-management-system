@@ -85,9 +85,18 @@ if (!$department) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+    $csrfToken =
+        $_POST['csrf_token']
+        ?? null;
+
+
     if (
+        !is_string(
+            $csrfToken
+        )
+        ||
         !verifyCsrfToken(
-            $_POST['csrf_token'] ?? null
+            $csrfToken
         )
     ) {
 
@@ -99,13 +108,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
 
-    $departmentName = trim(
-        $_POST['department_name'] ?? ''
-    );
+    $departmentNameInput =
+        $_POST['department_name']
+        ?? '';
 
-    $description = trim(
-        $_POST['description'] ?? ''
-    );
+
+    $departmentName =
+        is_string(
+            $departmentNameInput
+        )
+            ? trim(
+                $departmentNameInput
+            )
+            : '';
+
+
+    $descriptionInput =
+        $_POST['description']
+        ?? '';
+
+
+    $description =
+        is_string(
+            $descriptionInput
+        )
+            ? trim(
+                $descriptionInput
+            )
+            : '';
 
 
     /*
