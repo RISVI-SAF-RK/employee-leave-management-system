@@ -227,6 +227,21 @@ $leaveTypes =
 
 /*
 |--------------------------------------------------------------------------
+| Form Values
+|--------------------------------------------------------------------------
+|
+| Keep safe scalar values for validation and form repopulation.
+|
+*/
+
+$selectedLeaveTypeInput = '';
+$startDate = '';
+$endDate = '';
+$reason = '';
+
+
+/*
+|--------------------------------------------------------------------------
 | Submit Leave Application
 |--------------------------------------------------------------------------
 */
@@ -239,10 +254,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     |--------------------------------------------------------------------------
     */
 
+    $csrfToken =
+        $_POST['csrf_token']
+        ?? null;
+
+
     if (
+        !is_string(
+            $csrfToken
+        )
+        ||
         !verifyCsrfToken(
-            $_POST['csrf_token']
-            ?? null
+            $csrfToken
         )
     ) {
 
@@ -260,33 +283,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     |--------------------------------------------------------------------------
     */
 
+    $leaveTypeInput =
+        $_POST['leave_type_id']
+        ?? '';
+
+
+    $selectedLeaveTypeInput =
+        is_string(
+            $leaveTypeInput
+        )
+            ? trim(
+                $leaveTypeInput
+            )
+            : '';
+
+
     $leaveTypeId =
         filter_var(
-            $_POST['leave_type_id']
-            ?? null,
+            $selectedLeaveTypeInput,
             FILTER_VALIDATE_INT
         );
 
 
+    $startDateInput =
+        $_POST['start_date']
+        ?? '';
+
+
     $startDate =
-        trim(
-            $_POST['start_date']
-            ?? ''
-        );
+        is_string(
+            $startDateInput
+        )
+            ? trim(
+                $startDateInput
+            )
+            : '';
+
+
+    $endDateInput =
+        $_POST['end_date']
+        ?? '';
 
 
     $endDate =
-        trim(
-            $_POST['end_date']
-            ?? ''
-        );
+        is_string(
+            $endDateInput
+        )
+            ? trim(
+                $endDateInput
+            )
+            : '';
+
+
+    $reasonInput =
+        $_POST['reason']
+        ?? '';
 
 
     $reason =
-        trim(
-            $_POST['reason']
-            ?? ''
-        );
+        is_string(
+            $reasonInput
+        )
+            ? trim(
+                $reasonInput
+            )
+            : '';
 
 
     /*
@@ -801,16 +862,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             : false;
 
 
+    $upload =
+        $_FILES['attachment']
+        ?? null;
+
+
     $fileProvided =
-        isset(
-            $_FILES['attachment']
+        is_array(
+            $upload
         )
         &&
-        (
-            $_FILES['attachment']['error']
-            ?? UPLOAD_ERR_NO_FILE
+        isset(
+            $upload['error']
         )
-        !== UPLOAD_ERR_NO_FILE;
+        &&
+        is_int(
+            $upload['error']
+        )
+        &&
+        $upload['error']
+            !== UPLOAD_ERR_NO_FILE;
 
 
     if (
@@ -842,11 +913,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fileProvided
     ) {
 
-        $upload =
-            $_FILES['attachment'];
-
-
         if (
+            !is_array(
+                $upload
+            )
+            ||
+            !isset(
+                $upload['error'],
+                $upload['size'],
+                $upload['tmp_name']
+            )
+            ||
+            !is_int(
+                $upload['error']
+            )
+            ||
+            !is_int(
+                $upload['size']
+            )
+            ||
+            !is_string(
+                $upload['tmp_name']
+            )
+        ) {
+
+            $error =
+                'Invalid attachment upload.';
+
+        } elseif (
             $upload['error']
             !== UPLOAD_ERR_OK
         ) {
@@ -861,6 +955,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $error =
                 'Attachment size cannot exceed 5 MB.';
+
+        } elseif (
+            !is_uploaded_file(
+                $upload['tmp_name']
+            )
+        ) {
+
+            $error =
+                'Invalid attachment upload.';
 
         } else {
 
@@ -1469,11 +1572,9 @@ require_once __DIR__
                                 ] ?>"
 
                                 <?= (
-                                    ($_POST[
-                                        'leave_type_id'
-                                    ] ?? '')
-                                    ==
-                                    $type[
+                                    $selectedLeaveTypeInput
+                                    ===
+                                    (string)$type[
                                         'leave_type_id'
                                     ]
                                 )
@@ -1649,9 +1750,7 @@ require_once __DIR__
                                 class="form-control
                                        professional-input"
                                 value="<?= escape(
-                                    $_POST[
-                                        'start_date'
-                                    ] ?? ''
+                                    $startDate
                                 ) ?>"
                             >
 
@@ -1683,9 +1782,7 @@ require_once __DIR__
                                 class="form-control
                                        professional-input"
                                 value="<?= escape(
-                                    $_POST[
-                                        'end_date'
-                                    ] ?? ''
+                                    $endDate
                                 ) ?>"
                             >
 
@@ -1797,9 +1894,7 @@ require_once __DIR__
                                    professional-input"
                             placeholder="Briefly explain the reason for your leave request..."
                         ><?= escape(
-                            $_POST[
-                                'reason'
-                            ] ?? ''
+                            $reason
                         ) ?></textarea>
 
                     </div>
