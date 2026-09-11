@@ -133,6 +133,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | Newly Created Leave Type ID
+            |--------------------------------------------------------------------------
+            */
+
+            $leaveTypeId =
+                (int)$pdo
+                    ->lastInsertId();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Audit Leave Type Creation
+            |--------------------------------------------------------------------------
+            */
+
+            logAudit(
+                $pdo,
+                'LEAVE_TYPE_CREATED',
+                'leave_type',
+                $leaveTypeId,
+                'Created leave type: '
+                . $leaveTypeName
+                . ' ('
+                . (
+                    (int)$isPaidRaw === 1
+                        ? 'Paid'
+                        : 'Unpaid'
+                )
+                . ').'
+            );
+
+
             setFlash(
                 'success',
                 'Leave type created successfully.'

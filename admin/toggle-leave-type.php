@@ -6,10 +6,20 @@ require_once __DIR__ . '/../includes/role_check.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../config/database.php';
 
+
 requireRole('Administrator');
 
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+/*
+|--------------------------------------------------------------------------
+| POST Only
+|--------------------------------------------------------------------------
+*/
+
+if (
+    $_SERVER['REQUEST_METHOD']
+    !== 'POST'
+) {
 
     header(
         'Location: /admin/leave-types.php'
@@ -18,6 +28,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| CSRF Validation
+|--------------------------------------------------------------------------
+*/
 
 if (
     !verifyCsrfToken(
@@ -28,15 +44,24 @@ if (
 
     http_response_code(403);
 
-    exit('Invalid security token.');
+    exit(
+        'Invalid security token.'
+    );
 }
 
 
-$leaveTypeId = filter_input(
-    INPUT_POST,
-    'leave_type_id',
-    FILTER_VALIDATE_INT
-);
+/*
+|--------------------------------------------------------------------------
+| Leave Type ID
+|--------------------------------------------------------------------------
+*/
+
+$leaveTypeId =
+    filter_input(
+        INPUT_POST,
+        'leave_type_id',
+        FILTER_VALIDATE_INT
+    );
 
 
 if (!$leaveTypeId) {
@@ -46,6 +71,7 @@ if (!$leaveTypeId) {
         'Invalid leave type selected.'
     );
 
+
     header(
         'Location: /admin/leave-types.php'
     );
@@ -54,16 +80,32 @@ if (!$leaveTypeId) {
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| Update Leave Type Status
+|--------------------------------------------------------------------------
+*/
+
 try {
+
+    /*
+    |--------------------------------------------------------------------------
+    | Load Leave Type
+    |--------------------------------------------------------------------------
+    */
 
     $stmt =
         $pdo->prepare(
             "SELECT
                 leave_type_id,
+                leave_type_name,
                 status
+
              FROM leave_types
+
              WHERE leave_type_id =
                 :leave_type_id
+
              LIMIT 1"
         );
 
@@ -86,23 +128,42 @@ try {
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | Determine New Status
+    |--------------------------------------------------------------------------
+    */
+
+    $oldStatus =
+        $leaveType['status'];
+
+
     $newStatus =
-        $leaveType['status']
-        === 'Active'
+        $oldStatus === 'Active'
             ? 'Inactive'
             : 'Active';
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | Update Status
+    |--------------------------------------------------------------------------
+    */
+
     $updateStmt =
         $pdo->prepare(
             "UPDATE leave_types
-             SET status = :status
+
+             SET status =
+                :status
+
              WHERE leave_type_id =
                 :leave_type_id"
         );
 
 
     $updateStmt->execute([
+
         'status' =>
             $newStatus,
 
@@ -111,10 +172,41 @@ try {
     ]);
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | Audit Leave Type Status Change
+    |--------------------------------------------------------------------------
+    */
+
+    logAudit(
+        $pdo,
+        'LEAVE_TYPE_STATUS_CHANGED',
+        'leave_type',
+        (int)$leaveTypeId,
+        'Changed leave type '
+        . $leaveType[
+            'leave_type_name'
+        ]
+        . ' status from '
+        . $oldStatus
+        . ' to '
+        . $newStatus
+        . '.'
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Success
+    |--------------------------------------------------------------------------
+    */
+
     setFlash(
         'success',
         'Leave type '
-        . strtolower($newStatus)
+        . strtolower(
+            $newStatus
+        )
         . ' successfully.'
     );
 
@@ -122,8 +214,8 @@ try {
 } catch (Throwable $e) {
 
     error_log(
-        'Toggle leave type error: ' .
-        $e->getMessage()
+        'Toggle leave type error: '
+        . $e->getMessage()
     );
 
 
@@ -135,6 +227,12 @@ try {
     );
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| Redirect
+|--------------------------------------------------------------------------
+*/
 
 header(
     'Location: /admin/leave-types.php'

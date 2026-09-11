@@ -222,6 +222,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | Audit Leave Type Update
+            |--------------------------------------------------------------------------
+            */
+
+            logAudit(
+                $pdo,
+                'LEAVE_TYPE_UPDATED',
+                'leave_type',
+                (int)$leaveTypeId,
+                'Updated leave type: '
+                . $leaveTypeName
+                . ' ('
+                . (
+                    (int)$isPaidRaw === 1
+                        ? 'Paid'
+                        : 'Unpaid'
+                )
+                . ').'
+            );
+
+
             setFlash(
                 'success',
                 'Leave type updated successfully.'
