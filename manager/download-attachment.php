@@ -12,6 +12,12 @@ require_once __DIR__
 requireRole('Manager');
 
 
+/*
+|--------------------------------------------------------------------------
+| Validate Application ID
+|--------------------------------------------------------------------------
+*/
+
 $applicationId =
     filter_input(
         INPUT_GET,
@@ -20,7 +26,11 @@ $applicationId =
     );
 
 
-if (!$applicationId) {
+if (
+    !$applicationId
+    ||
+    $applicationId < 1
+) {
 
     http_response_code(400);
 
@@ -32,7 +42,7 @@ if (!$applicationId) {
 
 /*
 |--------------------------------------------------------------------------
-| Manager
+| Get Current Manager Profile
 |--------------------------------------------------------------------------
 */
 
@@ -51,7 +61,9 @@ $managerStmt =
 
 $managerStmt->execute([
     'user_id' =>
-        (int)$_SESSION['user_id']
+        (int)$_SESSION[
+            'user_id'
+        ]
 ]);
 
 
@@ -72,8 +84,12 @@ if (!$managerId) {
 
 /*
 |--------------------------------------------------------------------------
-| Check Manager Access
+| Verify Direct-Team Ownership
 |--------------------------------------------------------------------------
+|
+| The Manager may download an attachment only when the employee
+| currently reports directly to this Manager.
+|
 */
 
 $stmt =
@@ -87,22 +103,12 @@ $stmt =
             ON la.employee_id =
                e.employee_id
 
-         LEFT JOIN leave_approvals lap
-            ON la.application_id =
-               lap.application_id
-
          WHERE
             la.application_id =
                 :application_id
 
-            AND
-            (
-                e.manager_id =
-                    :current_manager_id
-
-                OR lap.manager_id =
-                    :approval_manager_id
-            )
+            AND e.manager_id =
+                :manager_id
 
          LIMIT 1"
     );
@@ -113,10 +119,7 @@ $stmt->execute([
     'application_id' =>
         $applicationId,
 
-    'current_manager_id' =>
-        $managerId,
-
-    'approval_manager_id' =>
+    'manager_id' =>
         $managerId
 ]);
 
@@ -133,7 +136,18 @@ if (
             'attachment'
         ]
     )
+    ||
+    !is_string(
+        $request[
+            'attachment'
+        ]
+    )
 ) {
+
+    /*
+    | Return 404 instead of revealing whether
+    | another Manager's employee/application exists.
+    */
 
     http_response_code(404);
 
@@ -145,7 +159,7 @@ if (
 
 /*
 |--------------------------------------------------------------------------
-| Railway Volume
+| Railway Persistent Volume
 |--------------------------------------------------------------------------
 */
 
@@ -155,7 +169,11 @@ $volumePath =
     );
 
 
-if (!$volumePath) {
+if (
+    !$volumePath
+    ||
+    !is_string($volumePath)
+) {
 
     http_response_code(500);
 
@@ -165,6 +183,49 @@ if (!$volumePath) {
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| Attachment Storage Directory
+|--------------------------------------------------------------------------
+*/
+
+$storageDirectory =
+    rtrim(
+        $volumePath,
+        DIRECTORY_SEPARATOR
+    )
+    . DIRECTORY_SEPARATOR
+    . 'leave-attachments';
+
+
+$realStorageDirectory =
+    realpath(
+        $storageDirectory
+    );
+
+
+if (
+    $realStorageDirectory === false
+    ||
+    !is_dir(
+        $realStorageDirectory
+    )
+) {
+
+    http_response_code(500);
+
+    exit(
+        'Attachment storage is unavailable.'
+    );
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Safe File Name
+|--------------------------------------------------------------------------
+*/
+
 $fileName =
     basename(
         $request[
@@ -173,18 +234,39 @@ $fileName =
     );
 
 
+if (
+    $fileName === ''
+    ||
+    $fileName === '.'
+    ||
+    $fileName === '..'
+) {
+
+    http_response_code(404);
+
+    exit(
+        'Attachment not found.'
+    );
+}
+
+
 $filePath =
-    rtrim(
-        $volumePath,
-        '/'
-    )
-    . '/leave-attachments/'
+    $realStorageDirectory
+    . DIRECTORY_SEPARATOR
     . $fileName;
 
 
-if (
-    !is_file(
+$realFilePath =
+    realpath(
         $filePath
+    );
+
+
+if (
+    $realFilePath === false
+    ||
+    !is_file(
+        $realFilePath
     )
 ) {
 
@@ -196,6 +278,44 @@ if (
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| Ensure File Stays Inside Storage Directory
+|--------------------------------------------------------------------------
+|
+| Protect against directory traversal and symbolic-link escape.
+|
+*/
+
+$allowedPathPrefix =
+    $realStorageDirectory
+    . DIRECTORY_SEPARATOR;
+
+
+if (
+    !str_starts_with(
+        $realFilePath,
+        $allowedPathPrefix
+    )
+) {
+
+    http_response_code(403);
+
+    exit(
+        'Invalid attachment path.'
+    );
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Validate MIME Type
+|--------------------------------------------------------------------------
+|
+| ELMS supports PDF, JPEG and PNG attachments.
+|
+*/
+
 $finfo =
     new finfo(
         FILEINFO_MIME_TYPE
@@ -204,9 +324,87 @@ $finfo =
 
 $mimeType =
     $finfo->file(
-        $filePath
+        $realFilePath
     );
 
+
+$allowedMimeTypes = [
+
+    'application/pdf' =>
+        'pdf',
+
+    'image/jpeg' =>
+        'jpg',
+
+    'image/png' =>
+        'png'
+];
+
+
+if (
+    !is_string($mimeType)
+    ||
+    !isset(
+        $allowedMimeTypes[
+            $mimeType
+        ]
+    )
+) {
+
+    http_response_code(415);
+
+    exit(
+        'Unsupported attachment type.'
+    );
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Safe Download File Name
+|--------------------------------------------------------------------------
+*/
+
+$downloadExtension =
+    $allowedMimeTypes[
+        $mimeType
+    ];
+
+
+$downloadFileName =
+    'leave-attachment-'
+    . $applicationId
+    . '.'
+    . $downloadExtension;
+
+
+/*
+|--------------------------------------------------------------------------
+| File Size
+|--------------------------------------------------------------------------
+*/
+
+$fileSize =
+    filesize(
+        $realFilePath
+    );
+
+
+if ($fileSize === false) {
+
+    http_response_code(500);
+
+    exit(
+        'Unable to read attachment.'
+    );
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Secure Download Response
+|--------------------------------------------------------------------------
+*/
 
 header(
     'Content-Type: '
@@ -216,20 +414,13 @@ header(
 
 header(
     'Content-Length: '
-    . filesize(
-        $filePath
-    )
+    . $fileSize
 );
 
 
 header(
-    'Content-Disposition: attachment; filename="leave-attachment-'
-    . $applicationId
-    . '.'
-    . pathinfo(
-        $fileName,
-        PATHINFO_EXTENSION
-    )
+    'Content-Disposition: attachment; filename="'
+    . $downloadFileName
     . '"'
 );
 
@@ -239,8 +430,35 @@ header(
 );
 
 
-readfile(
-    $filePath
+header(
+    'Cache-Control: private, no-store, no-cache, must-revalidate'
 );
+
+
+header(
+    'Pragma: no-cache'
+);
+
+
+/*
+|--------------------------------------------------------------------------
+| Send File
+|--------------------------------------------------------------------------
+*/
+
+$result =
+    readfile(
+        $realFilePath
+    );
+
+
+if ($result === false) {
+
+    error_log(
+        'Unable to send Manager leave attachment for application #'
+        . $applicationId
+    );
+}
+
 
 exit;
