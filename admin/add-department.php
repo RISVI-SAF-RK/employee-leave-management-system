@@ -13,32 +13,69 @@ require_once __DIR__ .
 require_once __DIR__ .
     '/../config/database.php';
 
+
 $error = '';
 
+
+/*
+|--------------------------------------------------------------------------
+| Form Submission
+|--------------------------------------------------------------------------
+*/
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    /*
+    |--------------------------------------------------------------------------
+    | CSRF Validation
+    |--------------------------------------------------------------------------
+    */
 
     if (
         !verifyCsrfToken(
             $_POST['csrf_token'] ?? null
         )
     ) {
+
         http_response_code(403);
 
-        exit('Invalid security token.');
+        exit(
+            'Invalid security token.'
+        );
     }
 
-    $departmentName = trim(
-        $_POST['department_name'] ?? ''
-    );
 
-    $description = trim(
-        $_POST['description'] ?? ''
-    );
+    /*
+    |--------------------------------------------------------------------------
+    | Input
+    |--------------------------------------------------------------------------
+    */
+
+    $departmentName =
+        trim(
+            $_POST['department_name']
+            ?? ''
+        );
+
+
+    $description =
+        trim(
+            $_POST['description']
+            ?? ''
+        );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Validation
+    |--------------------------------------------------------------------------
+    */
 
     if ($departmentName === '') {
 
         $error =
             'Department name is required.';
+
 
     } elseif (
         strlen($departmentName) > 100
@@ -47,24 +84,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error =
             'Department name is too long.';
 
+
     } else {
 
         try {
 
-            $stmt = $pdo->prepare(
-                "INSERT INTO departments
+            /*
+            |--------------------------------------------------------------------------
+            | Create Department
+            |--------------------------------------------------------------------------
+            */
+
+            $stmt =
+                $pdo->prepare(
+                    "INSERT INTO departments
                     (
                         department_name,
                         description
                     )
-                 VALUES
+
+                    VALUES
                     (
                         :department_name,
                         :description
                     )"
-            );
+                );
+
 
             $stmt->execute([
+
                 'department_name' =>
                     $departmentName,
 
@@ -74,10 +122,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         : null
             ]);
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | Newly Created Department ID
+            |--------------------------------------------------------------------------
+            */
+
+            $departmentId =
+                (int)$pdo
+                    ->lastInsertId();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Audit Department Creation
+            |--------------------------------------------------------------------------
+            */
+
+            logAudit(
+                $pdo,
+                'DEPARTMENT_CREATED',
+                'department',
+                $departmentId,
+                'Created department: '
+                . $departmentName
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Success
+            |--------------------------------------------------------------------------
+            */
+
             setFlash(
                 'success',
                 'Department created successfully.'
             );
+
 
             header(
                 'Location: /admin/departments.php'
@@ -85,7 +168,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             exit;
 
+
         } catch (PDOException $e) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Duplicate Department
+            |--------------------------------------------------------------------------
+            */
 
             if (
                 $e->getCode() === '23000'
@@ -94,12 +184,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error =
                     'That department already exists.';
 
+
             } else {
 
                 error_log(
-                    'Add department error: ' .
-                    $e->getMessage()
+                    'Add department error: '
+                    . $e->getMessage()
                 );
+
 
                 $error =
                     'Unable to create department.';
@@ -108,15 +200,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$pageTitle = 'Add Department';
+
+$pageTitle =
+    'Add Department';
+
 
 require_once __DIR__ .
     '/../includes/admin/header.php';
+
 ?>
+
 
 <h2 class="mb-4">
     Add Department
 </h2>
+
 
 <div class="card border-0 shadow-sm">
 
@@ -126,11 +224,14 @@ require_once __DIR__ .
 
             <div class="alert alert-danger">
 
-                <?= escape($error) ?>
+                <?= escape(
+                    $error
+                ) ?>
 
             </div>
 
         <?php endif; ?>
+
 
         <form method="POST">
 
@@ -142,6 +243,7 @@ require_once __DIR__ .
                 ) ?>"
             >
 
+
             <div class="mb-3">
 
                 <label
@@ -150,6 +252,7 @@ require_once __DIR__ .
                 >
                     Department Name
                 </label>
+
 
                 <input
                     type="text"
@@ -167,6 +270,7 @@ require_once __DIR__ .
 
             </div>
 
+
             <div class="mb-3">
 
                 <label
@@ -175,6 +279,7 @@ require_once __DIR__ .
                 >
                     Description
                 </label>
+
 
                 <textarea
                     id="description"
@@ -189,12 +294,14 @@ require_once __DIR__ .
 
             </div>
 
+
             <button
                 type="submit"
                 class="btn btn-dark"
             >
                 Save Department
             </button>
+
 
             <a
                 href="/admin/departments.php"
@@ -208,6 +315,7 @@ require_once __DIR__ .
     </div>
 
 </div>
+
 
 <?php
 

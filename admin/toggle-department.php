@@ -13,7 +13,17 @@ require_once __DIR__ .
 require_once __DIR__ .
     '/../config/database.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+
+/*
+|--------------------------------------------------------------------------
+| POST Only
+|--------------------------------------------------------------------------
+*/
+
+if (
+    $_SERVER['REQUEST_METHOD']
+    !== 'POST'
+) {
 
     header(
         'Location: /admin/departments.php'
@@ -22,22 +32,41 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| CSRF Validation
+|--------------------------------------------------------------------------
+*/
+
 if (
     !verifyCsrfToken(
-        $_POST['csrf_token'] ?? null
+        $_POST['csrf_token']
+        ?? null
     )
 ) {
 
     http_response_code(403);
 
-    exit('Invalid security token.');
+    exit(
+        'Invalid security token.'
+    );
 }
 
-$departmentId = filter_input(
-    INPUT_POST,
-    'department_id',
-    FILTER_VALIDATE_INT
-);
+
+/*
+|--------------------------------------------------------------------------
+| Department ID
+|--------------------------------------------------------------------------
+*/
+
+$departmentId =
+    filter_input(
+        INPUT_POST,
+        'department_id',
+        FILTER_VALIDATE_INT
+    );
+
 
 if (!$departmentId) {
 
@@ -46,6 +75,7 @@ if (!$departmentId) {
         'Invalid department.'
     );
 
+
     header(
         'Location: /admin/departments.php'
     );
@@ -53,18 +83,38 @@ if (!$departmentId) {
     exit;
 }
 
-$stmt = $pdo->prepare(
-    "SELECT status
-     FROM departments
-     WHERE department_id = :department_id
-     LIMIT 1"
-);
+
+/*
+|--------------------------------------------------------------------------
+| Load Department
+|--------------------------------------------------------------------------
+*/
+
+$stmt =
+    $pdo->prepare(
+        "SELECT
+            department_id,
+            department_name,
+            status
+
+         FROM departments
+
+         WHERE department_id =
+            :department_id
+
+         LIMIT 1"
+    );
+
 
 $stmt->execute([
-    'department_id' => $departmentId
+    'department_id' =>
+        $departmentId
 ]);
 
-$department = $stmt->fetch();
+
+$department =
+    $stmt->fetch();
+
 
 if (!$department) {
 
@@ -73,6 +123,7 @@ if (!$department) {
         'Department not found.'
     );
 
+
     header(
         'Location: /admin/departments.php'
     );
@@ -80,26 +131,108 @@ if (!$department) {
     exit;
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| Determine New Status
+|--------------------------------------------------------------------------
+*/
+
+$oldStatus =
+    $department['status'];
+
+
 $newStatus =
-    $department['status'] === 'Active'
+    $oldStatus === 'Active'
         ? 'Inactive'
         : 'Active';
 
-$update = $pdo->prepare(
-    "UPDATE departments
-     SET status = :status
-     WHERE department_id = :department_id"
-);
 
-$update->execute([
-    'status' => $newStatus,
-    'department_id' => $departmentId
-]);
+/*
+|--------------------------------------------------------------------------
+| Update Department Status
+|--------------------------------------------------------------------------
+*/
 
-setFlash(
-    'success',
-    'Department status updated successfully.'
-);
+try {
+
+    $update =
+        $pdo->prepare(
+            "UPDATE departments
+
+             SET status =
+                :status
+
+             WHERE department_id =
+                :department_id"
+        );
+
+
+    $update->execute([
+
+        'status' =>
+            $newStatus,
+
+        'department_id' =>
+            $departmentId
+    ]);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Audit Department Status Change
+    |--------------------------------------------------------------------------
+    */
+
+    logAudit(
+        $pdo,
+        'DEPARTMENT_STATUS_CHANGED',
+        'department',
+        (int)$departmentId,
+        'Changed department '
+        . $department[
+            'department_name'
+        ]
+        . ' status from '
+        . $oldStatus
+        . ' to '
+        . $newStatus
+        . '.'
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Success
+    |--------------------------------------------------------------------------
+    */
+
+    setFlash(
+        'success',
+        'Department status updated successfully.'
+    );
+
+
+} catch (Throwable $e) {
+
+    error_log(
+        'Department status update error: '
+        . $e->getMessage()
+    );
+
+
+    setFlash(
+        'danger',
+        'Unable to update department status.'
+    );
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Redirect
+|--------------------------------------------------------------------------
+*/
 
 header(
     'Location: /admin/departments.php'

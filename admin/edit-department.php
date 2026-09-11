@@ -194,6 +194,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
 
 
+                /*
+                |--------------------------------------------------------------------------
+                | Audit Department Update
+                |--------------------------------------------------------------------------
+                */
+
+                logAudit(
+                    $pdo,
+                    'DEPARTMENT_UPDATED',
+                    'department',
+                    (int)$departmentId,
+                    'Updated department: '
+                    . $departmentName
+                );
+
+
                 setFlash(
                     'success',
                     'Department updated successfully.'
