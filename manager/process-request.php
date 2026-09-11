@@ -660,6 +660,26 @@ try {
 
     $pdo->commit();
 
+    /*
+|--------------------------------------------------------------------------
+| Audit Manager Decision
+|--------------------------------------------------------------------------
+*/
+
+logAudit(
+    $pdo,
+    $decision === 'Approved'
+        ? 'LEAVE_APPROVED'
+        : 'LEAVE_REJECTED',
+    'leave_application',
+    (int)$applicationId,
+    'Manager '
+    . strtolower($decision)
+    . ' leave application #'
+    . (int)$applicationId
+    . '.'
+);
+
 
     setFlash(
         'success',
