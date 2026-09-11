@@ -12,6 +12,48 @@ require_once __DIR__
 requireRole('Administrator');
 
 
+/*
+|--------------------------------------------------------------------------
+| CSV Formula Injection Protection
+|--------------------------------------------------------------------------
+|
+| Spreadsheet applications may interpret cells beginning with =, +, -, or @
+| as formulas. Prefix potentially dangerous values with a single quote so
+| they are treated as plain text.
+|
+*/
+
+function csvSafe(mixed $value): string
+{
+    $value =
+        (string)(
+            $value
+            ?? ''
+        );
+
+
+    if (
+        preg_match(
+            '/^[\x00-\x20]*[=+\-@]/u',
+            $value
+        ) === 1
+    ) {
+
+        return "'"
+            . $value;
+    }
+
+
+    return $value;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Report Filters
+|--------------------------------------------------------------------------
+*/
+
 $currentYear =
     (int)date('Y');
 
@@ -44,6 +86,12 @@ $departmentId =
         FILTER_VALIDATE_INT
     );
 
+
+/*
+|--------------------------------------------------------------------------
+| Load Report Records
+|--------------------------------------------------------------------------
+*/
 
 $sql =
     "SELECT
@@ -141,6 +189,12 @@ $records =
     $stmt->fetchAll();
 
 
+/*
+|--------------------------------------------------------------------------
+| CSV Download Headers
+|--------------------------------------------------------------------------
+*/
+
 $fileName =
     'elms-leave-report-'
     . $selectedYear
@@ -164,6 +218,16 @@ header(
 );
 
 
+header(
+    'Cache-Control: no-store, no-cache, must-revalidate'
+);
+
+
+header(
+    'Pragma: no-cache'
+);
+
+
 /*
 |--------------------------------------------------------------------------
 | UTF-8 BOM for Excel
@@ -179,6 +243,22 @@ $output =
         'w'
     );
 
+
+if ($output === false) {
+
+    http_response_code(500);
+
+    exit(
+        'Unable to generate the report.'
+    );
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| CSV Header Row
+|--------------------------------------------------------------------------
+*/
 
 fputcsv(
     $output,
@@ -201,6 +281,12 @@ fputcsv(
 );
 
 
+/*
+|--------------------------------------------------------------------------
+| CSV Data Rows
+|--------------------------------------------------------------------------
+*/
+
 foreach (
     $records
     as $record
@@ -213,21 +299,29 @@ foreach (
                 'application_id'
             ],
 
-            $record[
-                'employee_code'
-            ],
+            csvSafe(
+                $record[
+                    'employee_code'
+                ]
+            ),
 
-            $record[
-                'employee_name'
-            ],
+            csvSafe(
+                $record[
+                    'employee_name'
+                ]
+            ),
 
-            $record[
-                'department_name'
-            ],
+            csvSafe(
+                $record[
+                    'department_name'
+                ]
+            ),
 
-            $record[
-                'leave_type_name'
-            ],
+            csvSafe(
+                $record[
+                    'leave_type_name'
+                ]
+            ),
 
             $record[
                 'start_date'
@@ -241,28 +335,36 @@ foreach (
                 'number_of_days'
             ],
 
-            $record[
-                'status'
-            ],
+            csvSafe(
+                $record[
+                    'status'
+                ]
+            ),
 
             $record[
                 'applied_at'
             ],
 
-            $record[
-                'manager_name'
-            ]
-                ?? '',
+            csvSafe(
+                $record[
+                    'manager_name'
+                ]
+                ?? ''
+            ),
 
-            $record[
-                'decision'
-            ]
-                ?? '',
+            csvSafe(
+                $record[
+                    'decision'
+                ]
+                ?? ''
+            ),
 
-            $record[
-                'comment'
-            ]
-                ?? '',
+            csvSafe(
+                $record[
+                    'comment'
+                ]
+                ?? ''
+            ),
 
             $record[
                 'decision_date'
