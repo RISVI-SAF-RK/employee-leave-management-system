@@ -20,22 +20,74 @@ const SESSION_IDLE_TIMEOUT = 1800;
 
 /*
 |--------------------------------------------------------------------------
-| Require Authentication
+| Secure Session Termination
 |--------------------------------------------------------------------------
 */
 
-if (
-    !isset(
-        $_SESSION['user_id']
-    )
-) {
+$terminateSession =
+    static function (): void {
 
-    header(
-        'Location: /login.php'
-    );
+        $_SESSION = [];
 
-    exit;
-}
+
+        if (
+            session_status()
+            === PHP_SESSION_ACTIVE
+            &&
+            ini_get(
+                'session.use_cookies'
+            )
+        ) {
+
+            $cookieParams =
+                session_get_cookie_params();
+
+
+            setcookie(
+                session_name(),
+                '',
+                [
+                    'expires' =>
+                        time() - 42000,
+
+                    'path' =>
+                        $cookieParams[
+                            'path'
+                        ] ?: '/',
+
+                    'domain' =>
+                        $cookieParams[
+                            'domain'
+                        ] ?? '',
+
+                    'secure' =>
+                        true,
+
+                    'httponly' =>
+                        true,
+
+                    'samesite' =>
+                        'Lax'
+                ]
+            );
+        }
+
+
+        if (
+            session_status()
+            === PHP_SESSION_ACTIVE
+        ) {
+
+            session_destroy();
+        }
+
+
+        header(
+            'Location: /login.php'
+        );
+
+        exit;
+    };
 
 
 /*
@@ -55,6 +107,48 @@ header(
 
 /*
 |--------------------------------------------------------------------------
+| Require Authentication
+|--------------------------------------------------------------------------
+*/
+
+$userIdRaw =
+    $_SESSION['user_id']
+    ?? null;
+
+
+if (
+    !is_int(
+        $userIdRaw
+    )
+    &&
+    !is_string(
+        $userIdRaw
+    )
+) {
+
+    $terminateSession();
+}
+
+
+$userId =
+    filter_var(
+        $userIdRaw,
+        FILTER_VALIDATE_INT
+    );
+
+
+if (
+    !$userId
+    ||
+    $userId < 1
+) {
+
+    $terminateSession();
+}
+
+
+/*
+|--------------------------------------------------------------------------
 | Check Session Inactivity
 |--------------------------------------------------------------------------
 */
@@ -63,14 +157,45 @@ $currentTime =
     time();
 
 
-$lastActivity =
-    isset(
-        $_SESSION['last_activity']
+$lastActivityRaw =
+    $_SESSION['last_activity']
+    ?? null;
+
+
+if (
+    $lastActivityRaw
+    !== null
+    &&
+    !is_int(
+        $lastActivityRaw
     )
-        ? (int)$_SESSION[
-            'last_activity'
-        ]
-        : $currentTime;
+    &&
+    !is_string(
+        $lastActivityRaw
+    )
+) {
+
+    $terminateSession();
+}
+
+
+$lastActivity =
+    $lastActivityRaw === null
+        ? $currentTime
+        : filter_var(
+            $lastActivityRaw,
+            FILTER_VALIDATE_INT
+        );
+
+
+if (
+    $lastActivity === false
+    ||
+    $lastActivity < 0
+) {
+
+    $terminateSession();
+}
 
 
 if (
@@ -78,90 +203,170 @@ if (
     >= SESSION_IDLE_TIMEOUT
 ) {
 
-    /*
-    |--------------------------------------------------------------------------
-    | Clear Session Data
-    |--------------------------------------------------------------------------
-    */
-
-    $_SESSION = [];
+    $terminateSession();
+}
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | Delete Session Cookie
-    |--------------------------------------------------------------------------
-    */
+/*
+|--------------------------------------------------------------------------
+| Load Current Account From Database
+|--------------------------------------------------------------------------
+|
+| Protected requests must use the current database account state,
+| not only the role/status stored when the session was created.
+|
+*/
 
-    if (
-        session_status()
-        === PHP_SESSION_ACTIVE
-        &&
-        ini_get(
-            'session.use_cookies'
-        )
-    ) {
-
-        $cookieParams =
-            session_get_cookie_params();
+require_once __DIR__
+    . '/../config/database.php';
 
 
-        setcookie(
-            session_name(),
-            '',
-            [
-                'expires' =>
-                    time() - 42000,
+$accountStmt =
+    $pdo->prepare(
+        "SELECT
+            u.user_id,
+            u.status AS user_status,
 
-                'path' =>
-                    $cookieParams[
-                        'path'
-                    ] ?: '/',
+            r.role_name,
 
-                'domain' =>
-                    $cookieParams[
-                        'domain'
-                    ] ?? '',
+            e.employee_id,
+            e.status AS employee_status
 
-                'secure' =>
-                    true,
+         FROM users u
 
-                'httponly' =>
-                    true,
+         INNER JOIN roles r
+            ON u.role_id =
+               r.role_id
 
-                'samesite' =>
-                    'Lax'
-            ]
-        );
-    }
+         LEFT JOIN employees e
+            ON e.user_id =
+               u.user_id
 
+         WHERE u.user_id =
+            :user_id
 
-    /*
-    |--------------------------------------------------------------------------
-    | Destroy Expired Session
-    |--------------------------------------------------------------------------
-    */
-
-    if (
-        session_status()
-        === PHP_SESSION_ACTIVE
-    ) {
-
-        session_destroy();
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Redirect To Login
-    |--------------------------------------------------------------------------
-    */
-
-    header(
-        'Location: /login.php'
+         LIMIT 1"
     );
 
-    exit;
+
+$accountStmt->execute([
+    'user_id' =>
+        (int)$userId
+]);
+
+
+$account =
+    $accountStmt->fetch();
+
+
+/*
+|--------------------------------------------------------------------------
+| Validate Current Account State
+|--------------------------------------------------------------------------
+*/
+
+if (!$account) {
+
+    $terminateSession();
+}
+
+
+if (
+    $account['user_status']
+    !== 'Active'
+) {
+
+    $terminateSession();
+}
+
+
+$currentRole =
+    $account['role_name']
+    ?? null;
+
+
+if (
+    !is_string(
+        $currentRole
+    )
+    ||
+    !in_array(
+        $currentRole,
+        [
+            'Administrator',
+            'Manager',
+            'Employee'
+        ],
+        true
+    )
+) {
+
+    $terminateSession();
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Employee / Manager Profile Must Also Be Active
+|--------------------------------------------------------------------------
+|
+| Administrators do not require an employee profile.
+|
+*/
+
+if (
+    in_array(
+        $currentRole,
+        [
+            'Employee',
+            'Manager'
+        ],
+        true
+    )
+    &&
+    (
+        empty(
+            $account[
+                'employee_id'
+            ]
+        )
+        ||
+        $account[
+            'employee_status'
+        ] !== 'Active'
+    )
+) {
+
+    $terminateSession();
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Reject Stale Role Sessions
+|--------------------------------------------------------------------------
+|
+| If an Administrator changes a user's role while that user is logged in,
+| the old session is invalidated immediately. The user must sign in again
+| to receive the new permissions.
+|
+*/
+
+$sessionRole =
+    $_SESSION['role']
+    ?? null;
+
+
+if (
+    !is_string(
+        $sessionRole
+    )
+    ||
+    $sessionRole !==
+        $currentRole
+) {
+
+    $terminateSession();
 }
 
 
@@ -170,7 +375,7 @@ if (
 | Refresh Activity Time
 |--------------------------------------------------------------------------
 |
-| Every valid request to a protected page resets the inactivity timer.
+| Only a valid, currently active account reaches this point.
 |
 */
 
