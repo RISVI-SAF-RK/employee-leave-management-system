@@ -6515,3 +6515,177 @@ a.employee-quick-action:hover {
     }
 
 }
+/* =========================================================
+   ADMIN AUDIT LOGS
+   ========================================================= */
+
+/* Audit table container */
+.admin-content .table-responsive {
+    scrollbar-width: thin;
+}
+
+
+/* Audit table */
+.admin-content .table {
+    vertical-align: middle;
+}
+
+
+/* Audit table headings */
+.admin-content .table thead th {
+    white-space: nowrap;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+
+/* Audit rows */
+.admin-content .table tbody td {
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+
+
+/* Audit action badge */
+.admin-content .table .badge.text-bg-light {
+    padding: 0.45rem 0.65rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    border-radius: 8px;
+    white-space: nowrap;
+}
+
+
+/* IP address */
+.admin-content .table code {
+    display: inline-block;
+    padding: 0.3rem 0.5rem;
+    border-radius: 6px;
+    background: rgba(15, 23, 42, 0.06);
+    font-size: 0.78rem;
+    word-break: break-all;
+}
+
+
+/* Description column */
+.admin-content .table td:nth-child(5) {
+    min-width: 260px;
+    max-width: 420px;
+}
+
+
+/* User column */
+.admin-content .table td:nth-child(2) {
+    min-width: 170px;
+}
+
+
+/* Action column */
+.admin-content .table td:nth-child(3) {
+    min-width: 190px;
+}
+
+
+/* Entity column */
+.admin-content .table td:nth-child(4) {
+    min-width: 130px;
+}
+
+
+/* IP column */
+.admin-content .table td:nth-child(6) {
+    min-width: 135px;
+}
+
+
+/* Filter form */
+.admin-content .professional-input {
+    min-height: 46px;
+}
+
+
+/* Empty audit state */
+.admin-content .empty-state {
+    padding: 1rem;
+}
+
+.admin-content .empty-state i {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+}
+
+.admin-content .empty-state h6 {
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+}
+
+.admin-content .empty-state p {
+    margin-bottom: 0;
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 991.98px) {
+
+    .admin-content .table-responsive .table {
+        min-width: 1000px;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 767.98px) {
+
+    .admin-content .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-content .table-responsive .table {
+        min-width: 950px;
+    }
+
+    .admin-content .table thead th {
+        font-size: 0.7rem;
+    }
+
+    .admin-content .table tbody td {
+        font-size: 0.8rem;
+    }
+
+    .admin-content .table .badge.text-bg-light {
+        font-size: 0.68rem;
+    }
+
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 575.98px) {
+
+    .admin-content .form-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .admin-content .form-actions a,
+    .admin-content .form-actions button {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+    }
+
+}
