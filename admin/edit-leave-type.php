@@ -93,32 +93,70 @@ if (!$leaveType) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+    $csrfToken =
+        $_POST['csrf_token']
+        ?? null;
+
+
     if (
+        !is_string(
+            $csrfToken
+        )
+        ||
         !verifyCsrfToken(
-            $_POST['csrf_token']
-            ?? null
+            $csrfToken
         )
     ) {
 
         http_response_code(403);
 
-        exit('Invalid security token.');
+        exit(
+            'Invalid security token.'
+        );
     }
 
 
-    $leaveTypeName = trim(
+    $leaveTypeNameInput =
         $_POST['leave_type_name']
-        ?? ''
-    );
+        ?? '';
 
-    $description = trim(
+
+    $leaveTypeName =
+        is_string(
+            $leaveTypeNameInput
+        )
+            ? trim(
+                $leaveTypeNameInput
+            )
+            : '';
+
+
+    $descriptionInput =
         $_POST['description']
-        ?? ''
-    );
+        ?? '';
 
-    $isPaidRaw =
+
+    $description =
+        is_string(
+            $descriptionInput
+        )
+            ? trim(
+                $descriptionInput
+            )
+            : '';
+
+
+    $isPaidInput =
         $_POST['is_paid']
         ?? '';
+
+
+    $isPaidRaw =
+        is_string(
+            $isPaidInput
+        )
+            ? $isPaidInput
+            : '';
 
 
     if ($leaveTypeName === '') {
@@ -280,8 +318,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $leaveType['description'] =
         $description;
 
-    $leaveType['is_paid'] =
-        (int)$isPaidRaw;
+    if (
+        in_array(
+            $isPaidRaw,
+            [
+                '0',
+                '1'
+            ],
+            true
+        )
+    ) {
+
+        $leaveType['is_paid'] =
+            (int)$isPaidRaw;
+    }
 }
 
 
