@@ -35,10 +35,18 @@ if (
 |--------------------------------------------------------------------------
 */
 
+$csrfToken =
+    $_POST['csrf_token']
+    ?? null;
+
+
 if (
+    !is_string(
+        $csrfToken
+    )
+    ||
     !verifyCsrfToken(
-        $_POST['csrf_token']
-        ?? null
+        $csrfToken
     )
 ) {
 
@@ -56,15 +64,27 @@ if (
 |--------------------------------------------------------------------------
 */
 
+$employeeIdInput =
+    $_POST['employee_id']
+    ?? null;
+
+
 $employeeId =
-    filter_input(
-        INPUT_POST,
-        'employee_id',
-        FILTER_VALIDATE_INT
-    );
+    is_string(
+        $employeeIdInput
+    )
+        ? filter_var(
+            $employeeIdInput,
+            FILTER_VALIDATE_INT
+        )
+        : false;
 
 
-if (!$employeeId) {
+if (
+    !$employeeId
+    ||
+    $employeeId < 1
+) {
 
     setFlash(
         'danger',
@@ -89,8 +109,21 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | Load Employee
+    | Begin Transaction
     |--------------------------------------------------------------------------
+    */
+
+    $pdo->beginTransaction();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Load And Lock Employee
+    |--------------------------------------------------------------------------
+    |
+    | Locking the employee row ensures the status and role used for this
+    | decision cannot change underneath this request.
+    |
     */
 
     $stmt =
@@ -118,7 +151,9 @@ try {
              WHERE e.employee_id =
                 :employee_id
 
-             LIMIT 1"
+             LIMIT 1
+
+             FOR UPDATE"
         );
 
 
@@ -142,60 +177,29 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | Prevent Manager Deactivation When They Still Supervise Active Employees
-    |--------------------------------------------------------------------------
-    */
-
-    if (
-        $employee['role_name']
-        === 'Manager'
-        &&
-        $employee['status']
-        === 'Active'
-    ) {
-
-        $teamStmt =
-            $pdo->prepare(
-                "SELECT COUNT(*)
-
-                 FROM employees
-
-                 WHERE manager_id =
-                    :manager_id
-
-                   AND status =
-                    'Active'"
-            );
-
-
-        $teamStmt->execute([
-            'manager_id' =>
-                $employeeId
-        ]);
-
-
-        $activeTeamCount =
-            (int)$teamStmt
-                ->fetchColumn();
-
-
-        if ($activeTeamCount > 0) {
-
-            throw new RuntimeException(
-                'This Manager cannot be deactivated because active employees are still assigned to them.'
-            );
-        }
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
     | Determine New Status
     |--------------------------------------------------------------------------
     */
 
     $oldStatus =
         $employee['status'];
+
+
+    if (
+        !in_array(
+            $oldStatus,
+            [
+                'Active',
+                'Inactive'
+            ],
+            true
+        )
+    ) {
+
+        throw new RuntimeException(
+            'Employee account has an invalid status.'
+        );
+    }
 
 
     $newStatus =
@@ -206,11 +210,50 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | Begin Transaction
+    | Prevent Manager Deactivation With Active Team Members
     |--------------------------------------------------------------------------
     */
 
-    $pdo->beginTransaction();
+    if (
+        $employee['role_name']
+        === 'Manager'
+        &&
+        $newStatus
+        === 'Inactive'
+    ) {
+
+        $teamStmt =
+            $pdo->prepare(
+                "SELECT
+                    employee_id
+
+                 FROM employees
+
+                 WHERE manager_id =
+                    :manager_id
+
+                   AND status =
+                    'Active'
+
+                 FOR UPDATE"
+            );
+
+
+        $teamStmt->execute([
+            'manager_id' =>
+                $employeeId
+        ]);
+
+
+        if (
+            $teamStmt->fetch()
+        ) {
+
+            throw new RuntimeException(
+                'This Manager cannot be deactivated because active employees are still assigned to them.'
+            );
+        }
+    }
 
 
     /*
@@ -265,7 +308,7 @@ try {
             $newStatus,
 
         'user_id' =>
-            $employee[
+            (int)$employee[
                 'user_id'
             ]
     ]);
