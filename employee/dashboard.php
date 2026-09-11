@@ -244,23 +244,16 @@ require_once __DIR__
 
         <div class="employee-hero-actions">
 
-            <button
-                type="button"
-                class="employee-primary-action"
-                disabled
-                title="Leave application will be available in the next phase."
-            >
+            <a
+    href="/employee/apply-leave.php"
+    class="employee-primary-action"
+>
 
-                <i class="bi bi-calendar-plus-fill"></i>
+    <i class="bi bi-calendar-plus-fill"></i>
 
-                Apply for Leave
+    Apply for Leave
 
-                <small>
-                    Coming Next
-                </small>
-
-            </button>
-
+</a> 
 
             <a
                 href="/employee/my-balances.php"
