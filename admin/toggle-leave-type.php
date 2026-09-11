@@ -35,10 +35,18 @@ if (
 |--------------------------------------------------------------------------
 */
 
+$csrfToken =
+    $_POST['csrf_token']
+    ?? null;
+
+
 if (
+    !is_string(
+        $csrfToken
+    )
+    ||
     !verifyCsrfToken(
-        $_POST['csrf_token']
-        ?? null
+        $csrfToken
     )
 ) {
 
@@ -56,15 +64,27 @@ if (
 |--------------------------------------------------------------------------
 */
 
+$leaveTypeIdInput =
+    $_POST['leave_type_id']
+    ?? null;
+
+
 $leaveTypeId =
-    filter_input(
-        INPUT_POST,
-        'leave_type_id',
-        FILTER_VALIDATE_INT
-    );
+    is_string(
+        $leaveTypeIdInput
+    )
+        ? filter_var(
+            $leaveTypeIdInput,
+            FILTER_VALIDATE_INT
+        )
+        : false;
 
 
-if (!$leaveTypeId) {
+if (
+    !$leaveTypeId
+    ||
+    $leaveTypeId < 1
+) {
 
     setFlash(
         'danger',
@@ -90,7 +110,16 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | Load Leave Type
+    | Begin Transaction
+    |--------------------------------------------------------------------------
+    */
+
+    $pdo->beginTransaction();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Load And Lock Leave Type
     |--------------------------------------------------------------------------
     */
 
@@ -106,7 +135,9 @@ try {
              WHERE leave_type_id =
                 :leave_type_id
 
-             LIMIT 1"
+             LIMIT 1
+
+             FOR UPDATE"
         );
 
 
@@ -130,13 +161,38 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | Determine New Status
+    | Validate Current Status
     |--------------------------------------------------------------------------
     */
 
     $oldStatus =
-        $leaveType['status'];
+        $leaveType[
+            'status'
+        ];
 
+
+    if (
+        !in_array(
+            $oldStatus,
+            [
+                'Active',
+                'Inactive'
+            ],
+            true
+        )
+    ) {
+
+        throw new RuntimeException(
+            'Leave type has an invalid status.'
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Determine New Status
+    |--------------------------------------------------------------------------
+    */
 
     $newStatus =
         $oldStatus === 'Active'
@@ -170,6 +226,15 @@ try {
         'leave_type_id' =>
             $leaveTypeId
     ]);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Commit Status Change
+    |--------------------------------------------------------------------------
+    */
+
+    $pdo->commit();
 
 
     /*
@@ -212,6 +277,14 @@ try {
 
 
 } catch (Throwable $e) {
+
+    if (
+        $pdo->inTransaction()
+    ) {
+
+        $pdo->rollBack();
+    }
+
 
     error_log(
         'Toggle leave type error: '
