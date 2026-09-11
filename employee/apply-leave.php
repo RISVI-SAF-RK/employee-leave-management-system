@@ -1148,6 +1148,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->commit();
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | Audit Successful Leave Submission
+            |--------------------------------------------------------------------------
+            */
+
+            logAudit(
+                $pdo,
+                'LEAVE_APPLICATION_SUBMITTED',
+                'leave_application',
+                (int)$applicationId,
+                'Employee submitted '
+                . $selectedPolicy[
+                    'leave_type_name'
+                ]
+                . ' leave for '
+                . number_format(
+                    (float)$numberOfDays,
+                    2
+                )
+                . ' day(s).'
+            );
+
+
             setFlash(
                 'success',
                 'Your leave application was submitted successfully and sent to your Manager.'
