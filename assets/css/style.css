@@ -4534,3 +4534,500 @@ a.employee-quick-action:hover {
     }
 
 }
+/* =========================================================
+   MANAGER PORTAL
+   ========================================================= */
+
+.manager-portal-body {
+    background: #f5f7fb;
+}
+
+
+.manager-sidebar {
+    background:
+        linear-gradient(
+            180deg,
+            #172554 0%,
+            #111827 100%
+        );
+}
+
+
+/* HERO */
+
+.manager-dashboard-hero {
+    position: relative;
+
+    min-height: 245px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    overflow: hidden;
+
+    margin-bottom: 28px;
+
+    padding:
+        clamp(30px, 5vw, 48px);
+
+    border-radius: 21px;
+
+    background:
+        linear-gradient(
+            125deg,
+            #0f766e 0%,
+            #0d9488 48%,
+            #14b8a6 100%
+        );
+
+    color: #ffffff;
+
+    box-shadow:
+        0 20px 45px
+        rgba(13, 148, 136, .18);
+}
+
+
+.manager-dashboard-hero
+> div:first-child {
+    position: relative;
+
+    z-index: 2;
+
+    max-width: 720px;
+}
+
+
+.manager-hero-label {
+    width: fit-content;
+
+    display: flex;
+    align-items: center;
+
+    gap: 7px;
+
+    margin-bottom: 15px;
+
+    padding:
+        7px
+        11px;
+
+    border:
+        1px solid
+        rgba(255,255,255,.20);
+
+    border-radius: 999px;
+
+    background:
+        rgba(255,255,255,.10);
+
+    font-size: 10px;
+    font-weight: 650;
+}
+
+
+.manager-dashboard-hero h2 {
+    margin-bottom: 10px;
+
+    color: #fff;
+
+    font-size:
+        clamp(
+            27px,
+            4vw,
+            39px
+        );
+
+    font-weight: 800;
+}
+
+
+.manager-dashboard-hero p {
+    max-width: 590px;
+
+    margin: 0;
+
+    color:
+        rgba(255,255,255,.82);
+
+    font-size: 13px;
+
+    line-height: 1.7;
+}
+
+
+.manager-hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    margin-top: 20px;
+}
+
+
+.manager-hero-meta span {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 6px;
+
+    padding:
+        7px
+        10px;
+
+    border:
+        1px solid
+        rgba(255,255,255,.13);
+
+    border-radius: 8px;
+
+    background:
+        rgba(255,255,255,.10);
+
+    font-size: 9px;
+}
+
+
+.manager-hero-actions {
+    margin-top: 24px;
+}
+
+
+.manager-primary-action {
+    min-height: 43px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    padding:
+        10px
+        15px;
+
+    border-radius: 9px;
+
+    background: #ffffff;
+
+    color: #0f766e;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    text-decoration: none;
+
+    transition:
+        transform .2s,
+        box-shadow .2s;
+}
+
+
+.manager-primary-action:hover {
+    transform:
+        translateY(-2px);
+
+    color: #115e59;
+
+    box-shadow:
+        0 10px 24px
+        rgba(0,0,0,.13);
+}
+
+
+.manager-hero-icon {
+    position: absolute;
+
+    right: 8%;
+
+    top: 50%;
+
+    transform:
+        translateY(-50%)
+        rotate(-8deg);
+
+    color:
+        rgba(255,255,255,.12);
+
+    font-size:
+        clamp(
+            100px,
+            12vw,
+            165px
+        );
+}
+
+
+/* KPI */
+
+.manager-pending-icon {
+    color: #d97706 !important;
+
+    background: #fff7ed !important;
+}
+
+
+.manager-approved-icon {
+    color: #15803d !important;
+
+    background: #ecfdf5 !important;
+}
+
+
+.manager-rejected-icon {
+    color: #dc2626 !important;
+
+    background: #fef2f2 !important;
+}
+
+
+/* REVIEW EMPLOYEE */
+
+.manager-employee-profile {
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+}
+
+
+.manager-review-avatar {
+    width: 58px;
+    height: 58px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 15px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ccfbf1,
+            #99f6e4
+        );
+
+    color: #0f766e;
+
+    font-size: 15px;
+    font-weight: 800;
+}
+
+
+.manager-employee-profile
+> div:last-child {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.manager-employee-profile h5 {
+    margin:
+        0
+        0
+        3px;
+
+    color: #1e293b;
+
+    font-size: 15px;
+}
+
+
+.manager-employee-profile span {
+    color: #64748b;
+
+    font-size: 10px;
+}
+
+
+.manager-employee-profile small {
+    margin-top: 3px;
+
+    color: #94a3b8;
+
+    font-size: 9px;
+}
+
+
+/* BALANCE */
+
+.manager-balance-highlight {
+    padding: 20px;
+
+    border:
+        1px solid #bbf7d0;
+
+    border-radius: 13px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f0fdf4,
+            #ecfdf5
+        );
+
+    text-align: center;
+}
+
+
+.manager-balance-highlight span {
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: #64748b;
+
+    font-size: 9px;
+
+    text-transform: uppercase;
+}
+
+
+.manager-balance-highlight strong {
+    display: block;
+
+    color: #15803d;
+
+    font-size: 33px;
+    font-weight: 800;
+}
+
+
+.manager-balance-highlight small {
+    color: #64748b;
+
+    font-size: 9px;
+}
+
+
+/* DECISION BUTTONS */
+
+.manager-decision-actions {
+    display: flex;
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    padding-top: 21px;
+
+    border-top:
+        1px solid #f1f5f9;
+}
+
+
+.manager-approve-button,
+.manager-reject-button {
+    min-height: 44px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    padding:
+        10px
+        16px;
+
+    border-radius: 9px;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    transition:
+        transform .2s,
+        box-shadow .2s;
+}
+
+
+.manager-approve-button {
+    border:
+        1px solid #16a34a;
+
+    background: #16a34a;
+
+    color: #fff;
+}
+
+
+.manager-approve-button:hover {
+    transform:
+        translateY(-1px);
+
+    background: #15803d;
+
+    box-shadow:
+        0 8px 18px
+        rgba(22,163,74,.20);
+}
+
+
+.manager-reject-button {
+    border:
+        1px solid #fecaca;
+
+    background: #fff;
+
+    color: #dc2626;
+}
+
+
+.manager-reject-button:hover {
+    transform:
+        translateY(-1px);
+
+    border-color: #dc2626;
+
+    background: #fef2f2;
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 767.98px) {
+
+    .manager-dashboard-hero {
+        min-height: auto;
+
+        padding:
+            27px
+            21px;
+
+        border-radius: 16px;
+    }
+
+
+    .manager-hero-icon {
+        right: -10px;
+
+        opacity: .6;
+    }
+
+
+    .manager-dashboard-hero
+    > div:first-child {
+        max-width: 93%;
+    }
+
+
+    .manager-primary-action {
+        width: 100%;
+    }
+
+
+    .manager-decision-actions {
+        flex-direction: column-reverse;
+    }
+
+
+    .manager-approve-button,
+    .manager-reject-button {
+        width: 100%;
+    }
+
+}
