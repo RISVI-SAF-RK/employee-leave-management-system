@@ -259,5 +259,302 @@ carryForwardRadios.forEach(
 );
 
 
-updateCarryForwardField();}
+updateCarryForwardField();
+
+/*
+==========================================================
+EMPLOYEE LEAVE APPLICATION
+==========================================================
+*/
+
+const leaveTypeSelect =
+    document.getElementById(
+        'leave_type_id'
+    );
+
+const policyPreview =
+    document.getElementById(
+        'leavePolicyPreview'
+    );
+
+const previewAvailable =
+    document.getElementById(
+        'previewAvailable'
+    );
+
+const previewPending =
+    document.getElementById(
+        'previewPending'
+    );
+
+const previewService =
+    document.getElementById(
+        'previewService'
+    );
+
+const previewAttachment =
+    document.getElementById(
+        'previewAttachment'
+    );
+
+const attachmentInput =
+    document.getElementById(
+        'attachment'
+    );
+
+const attachmentRequiredMark =
+    document.getElementById(
+        'attachmentRequiredMark'
+    );
+
+const startDateInput =
+    document.getElementById(
+        'start_date'
+    );
+
+const endDateInput =
+    document.getElementById(
+        'end_date'
+    );
+
+const requestedDays =
+    document.getElementById(
+        'requestedDays'
+    );
+
+
+function updateLeaveTypePreview() {
+
+    if (
+        !leaveTypeSelect ||
+        !policyPreview
+    ) {
+        return;
+    }
+
+
+    const option =
+        leaveTypeSelect.options[
+            leaveTypeSelect.selectedIndex
+        ];
+
+
+    if (
+        !option ||
+        !option.value
+    ) {
+
+        policyPreview.classList.add(
+            'd-none'
+        );
+
+        if (attachmentInput) {
+            attachmentInput.required = false;
+        }
+
+        if (attachmentRequiredMark) {
+            attachmentRequiredMark
+                .classList.add(
+                    'd-none'
+                );
+        }
+
+        return;
+    }
+
+
+    policyPreview.classList.remove(
+        'd-none'
+    );
+
+
+    if (previewAvailable) {
+
+        previewAvailable.textContent =
+            option.dataset.available
+            || '0.00';
+    }
+
+
+    if (previewPending) {
+
+        previewPending.textContent =
+            option.dataset.pending
+            || '0.00';
+    }
+
+
+    if (previewService) {
+
+        previewService.textContent =
+            option.dataset.minService
+            || '0';
+    }
+
+
+    const requiresAttachment =
+        option.dataset.attachment
+        === '1';
+
+
+    if (previewAttachment) {
+
+        previewAttachment.textContent =
+            requiresAttachment
+                ? 'Required'
+                : 'Optional';
+    }
+
+
+    if (attachmentInput) {
+
+        attachmentInput.required =
+            requiresAttachment;
+    }
+
+
+    if (attachmentRequiredMark) {
+
+        attachmentRequiredMark
+            .classList.toggle(
+                'd-none',
+                !requiresAttachment
+            );
+    }
+}
+
+
+function updateRequestedDays() {
+
+    if (
+        !startDateInput ||
+        !endDateInput ||
+        !requestedDays
+    ) {
+        return;
+    }
+
+
+    const start =
+        startDateInput.value;
+
+    const end =
+        endDateInput.value;
+
+
+    if (!start || !end) {
+
+        requestedDays.textContent =
+            'Select dates';
+
+        return;
+    }
+
+
+    const startDate =
+        new Date(
+            start + 'T00:00:00'
+        );
+
+    const endDate =
+        new Date(
+            end + 'T00:00:00'
+        );
+
+
+    if (
+        endDate < startDate
+    ) {
+
+        requestedDays.textContent =
+            'Invalid date range';
+
+        return;
+    }
+
+
+    if (
+        startDate.getFullYear()
+        !==
+        endDate.getFullYear()
+    ) {
+
+        requestedDays.textContent =
+            'Separate leave years required';
+
+        return;
+    }
+
+
+    const millisecondsPerDay =
+        1000
+        * 60
+        * 60
+        * 24;
+
+
+    const difference =
+        Math.round(
+            (
+                endDate
+                -
+                startDate
+            )
+            /
+            millisecondsPerDay
+        )
+        + 1;
+
+
+    requestedDays.textContent =
+        difference
+        + (
+            difference === 1
+                ? ' day'
+                : ' days'
+        );
+
+
+    /*
+    Keep End Date >= Start Date
+    */
+
+    if (endDateInput) {
+
+        endDateInput.min =
+            start;
+    }
+}
+
+
+if (leaveTypeSelect) {
+
+    leaveTypeSelect.addEventListener(
+        'change',
+        updateLeaveTypePreview
+    );
+
+    updateLeaveTypePreview();
+}
+
+
+if (startDateInput) {
+
+    startDateInput.addEventListener(
+        'change',
+        updateRequestedDays
+    );
+}
+
+
+if (endDateInput) {
+
+    endDateInput.addEventListener(
+        'change',
+        updateRequestedDays
+    );
+}
+
+
+updateRequestedDays();}
 );

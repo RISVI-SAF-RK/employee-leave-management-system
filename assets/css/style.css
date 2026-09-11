@@ -3749,3 +3749,788 @@ a.employee-quick-action:hover {
     }
 
 }
+/* =========================================================
+   EMPLOYEE LEAVE APPLICATION
+   ========================================================= */
+
+.leave-policy-preview {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 10px;
+
+    padding: 14px;
+
+    border: 1px solid #e0e7ff;
+
+    border-radius: 12px;
+
+    background: #f8faff;
+}
+
+
+.leave-policy-preview > div {
+    padding: 10px;
+
+    border-radius: 9px;
+
+    background: #ffffff;
+}
+
+
+.leave-policy-preview span {
+    display: block;
+
+    margin-bottom: 3px;
+
+    color: #94a3b8;
+
+    font-size: 8px;
+
+    text-transform: uppercase;
+
+    letter-spacing: .05em;
+}
+
+
+.leave-policy-preview strong {
+    color: #334155;
+
+    font-size: 14px;
+}
+
+
+.leave-policy-preview small {
+    color: #94a3b8;
+
+    font-size: 9px;
+}
+
+
+/* DURATION */
+
+.leave-duration-preview {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    margin-top: 20px;
+
+    padding: 14px;
+
+    border-radius: 11px;
+
+    background: #f8fafc;
+}
+
+
+.leave-duration-icon {
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 10px;
+
+    background: #eef2ff;
+
+    color: #4f46e5;
+}
+
+
+.leave-duration-preview
+> div:last-child {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.leave-duration-preview span {
+    color: #94a3b8;
+
+    font-size: 9px;
+
+    text-transform: uppercase;
+}
+
+
+.leave-duration-preview strong {
+    color: #334155;
+
+    font-size: 13px;
+}
+
+
+/* UPLOAD */
+
+.leave-upload-box {
+    display: grid;
+
+    grid-template-columns:
+        auto 1fr;
+
+    gap: 12px;
+
+    padding: 16px;
+
+    border:
+        1px dashed
+        #cbd5e1;
+
+    border-radius: 12px;
+
+    background: #fafcff;
+}
+
+
+.leave-upload-box
+> i {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    grid-row: span 2;
+
+    border-radius: 11px;
+
+    background: #eef2ff;
+
+    color: #4f46e5;
+
+    font-size: 18px;
+}
+
+
+.leave-upload-box
+> div {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.leave-upload-box strong {
+    color: #334155;
+
+    font-size: 11px;
+}
+
+
+.leave-upload-box span {
+    color: #94a3b8;
+
+    font-size: 9px;
+}
+
+
+.leave-upload-box
+.form-control {
+    grid-column: 1 / -1;
+
+    margin-top: 4px;
+
+    border-color: #e2e8f0;
+
+    font-size: 11px;
+}
+
+
+/* MANAGER */
+
+.leave-manager-card {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+}
+
+
+.leave-manager-avatar {
+    width: 48px;
+    height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 14px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #eef2ff,
+            #ddd6fe
+        );
+
+    color: #4f46e5;
+
+    font-size: 13px;
+    font-weight: 800;
+}
+
+
+.leave-manager-card
+> div:last-child {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.leave-manager-card strong {
+    color: #334155;
+
+    font-size: 12px;
+}
+
+
+.leave-manager-card span {
+    margin-top: 3px;
+
+    color: #94a3b8;
+
+    font-size: 9px;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   LEAVE STATUS
+   ========================================================= */
+
+.leave-status-badge {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 5px;
+
+    padding:
+        6px
+        10px;
+
+    border-radius: 999px;
+
+    font-size: 10px;
+    font-weight: 700;
+}
+
+
+.leave-status-pending {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+
+.leave-status-approved {
+    background: #ecfdf5;
+    color: #15803d;
+}
+
+
+.leave-status-rejected {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+
+.leave-status-large {
+    padding:
+        8px
+        13px;
+
+    font-size: 11px;
+}
+
+
+/* =========================================================
+   LEAVE HISTORY
+   ========================================================= */
+
+.leave-summary-red {
+    width: 44px;
+    height: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background: #fef2f2;
+
+    color: #dc2626;
+
+    font-size: 18px;
+}
+
+
+.leave-history-filters {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 7px;
+}
+
+
+.leave-filter-pill {
+    padding:
+        7px
+        12px;
+
+    border:
+        1px solid #e2e8f0;
+
+    border-radius: 999px;
+
+    background: #fff;
+
+    color: #64748b;
+
+    font-size: 10px;
+    font-weight: 650;
+
+    text-decoration: none;
+
+    transition: .2s;
+}
+
+
+.leave-filter-pill:hover {
+    border-color: #c7d2fe;
+
+    color: #4f46e5;
+}
+
+
+.leave-filter-pill.active {
+    border-color: #4f46e5;
+
+    background: #eef2ff;
+
+    color: #4f46e5;
+}
+
+
+.leave-history-type {
+    min-width: 180px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+}
+
+
+.leave-history-type
+> div {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 10px;
+
+    background: #eef2ff;
+
+    color: #4f46e5;
+}
+
+
+.leave-history-type
+> span {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.leave-history-type strong {
+    color: #334155;
+
+    font-size: 11px;
+}
+
+
+.leave-history-type small {
+    color: #94a3b8;
+
+    font-size: 8px;
+}
+
+
+.leave-history-date {
+    color: #334155;
+
+    font-size: 11px;
+}
+
+
+/* =========================================================
+   VIEW LEAVE
+   ========================================================= */
+
+.leave-view-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 10px;
+}
+
+
+.leave-view-grid > div {
+    padding: 14px;
+
+    border-radius: 10px;
+
+    background: #f8fafc;
+}
+
+
+.leave-view-grid span {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #94a3b8;
+
+    font-size: 8px;
+
+    text-transform: uppercase;
+}
+
+
+.leave-view-grid strong {
+    color: #334155;
+
+    font-size: 11px;
+}
+
+
+.leave-reason-box {
+    padding: 16px;
+
+    border:
+        1px solid #eef2f7;
+
+    border-radius: 12px;
+
+    background: #fff;
+}
+
+
+.leave-reason-box span,
+.leave-manager-comment span {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #94a3b8;
+
+    font-size: 8px;
+
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: .06em;
+}
+
+
+.leave-reason-box p,
+.leave-manager-comment p {
+    margin: 0;
+
+    color: #475569;
+
+    font-size: 11px;
+
+    line-height: 1.7;
+}
+
+
+.leave-attachment-card {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 13px;
+
+    border:
+        1px solid #e2e8f0;
+
+    border-radius: 11px;
+
+    background: #f8fafc;
+}
+
+
+.leave-attachment-card
+> div {
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 10px;
+
+    background: #eef2ff;
+
+    color: #4f46e5;
+}
+
+
+.leave-attachment-card
+> span {
+    flex: 1;
+
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+}
+
+
+.leave-attachment-card strong {
+    color: #334155;
+
+    font-size: 10px;
+}
+
+
+.leave-attachment-card small {
+    color: #94a3b8;
+
+    font-size: 8px;
+}
+
+
+/* DECISION */
+
+.leave-decision-panel {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 10px;
+}
+
+
+.leave-decision-panel > div {
+    padding: 14px;
+
+    border-radius: 10px;
+
+    background: #f8fafc;
+}
+
+
+.leave-decision-panel span {
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: #94a3b8;
+
+    font-size: 8px;
+
+    text-transform: uppercase;
+}
+
+
+.leave-decision-panel strong {
+    color: #334155;
+
+    font-size: 11px;
+}
+
+
+.leave-manager-comment {
+    padding: 15px;
+
+    border-left:
+        3px solid #6366f1;
+
+    border-radius:
+        0 10px 10px 0;
+
+    background: #f8faff;
+}
+
+
+/* TIMELINE */
+
+.leave-timeline {
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 0;
+}
+
+
+.leave-timeline-item {
+    position: relative;
+
+    display: flex;
+
+    gap: 13px;
+
+    min-height: 75px;
+}
+
+
+.leave-timeline-item
+> span {
+    position: relative;
+
+    z-index: 2;
+
+    width: 12px;
+    height: 12px;
+
+    flex-shrink: 0;
+
+    margin-top: 4px;
+
+    border:
+        3px solid #cbd5e1;
+
+    border-radius: 50%;
+
+    background: #fff;
+}
+
+
+.leave-timeline-item:not(:last-child)::after {
+    content: "";
+
+    position: absolute;
+
+    top: 15px;
+    left: 5px;
+
+    width: 2px;
+    height: calc(100% - 7px);
+
+    background: #e2e8f0;
+}
+
+
+.leave-timeline-item
+> div {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.leave-timeline-item strong {
+    color: #334155;
+
+    font-size: 10px;
+}
+
+
+.leave-timeline-item small {
+    margin-top: 3px;
+
+    color: #94a3b8;
+
+    font-size: 8px;
+}
+
+
+.leave-timeline-item.completed
+> span {
+    border-color: #6366f1;
+
+    background: #6366f1;
+}
+
+
+.leave-timeline-item.current
+> span {
+    border-color: #f59e0b;
+
+    background: #fff7ed;
+}
+
+
+.leave-timeline-item.approved
+> span {
+    border-color: #16a34a;
+
+    background: #16a34a;
+}
+
+
+.leave-timeline-item.rejected
+> span {
+    border-color: #dc2626;
+
+    background: #dc2626;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 767.98px) {
+
+    .leave-policy-preview {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+
+    .leave-view-grid {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+
+    .leave-decision-panel {
+        grid-template-columns:
+            1fr;
+    }
+
+}
+
+
+@media (max-width: 480px) {
+
+    .leave-policy-preview {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .leave-view-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+}

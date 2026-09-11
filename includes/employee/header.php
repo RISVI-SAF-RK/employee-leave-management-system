@@ -240,25 +240,18 @@ $avatarLetter = strtoupper(
 
 
         <a
-            href="#"
-            class="sidebar-link
-                   sidebar-link-disabled"
-        >
+    href="/employee/apply-leave.php"
+    class="sidebar-link
+    <?= $isActive([
+        'apply-leave.php'
+    ]) ?>"
+>
+    <i class="bi bi-calendar-plus-fill"></i>
 
-            <i
-                class="bi
-                       bi-calendar-plus-fill"
-            ></i>
-
-            <span>
-                Apply for Leave
-            </span>
-
-            <small>
-                Next
-            </small>
-
-        </a>
+    <span>
+        Apply for Leave
+    </span>
+</a>
 
 
         <a
@@ -282,25 +275,19 @@ $avatarLetter = strtoupper(
 
 
         <a
-            href="#"
-            class="sidebar-link
-                   sidebar-link-disabled"
-        >
+    href="/employee/leave-history.php"
+    class="sidebar-link
+    <?= $isActive([
+        'leave-history.php',
+        'view-leave.php'
+    ]) ?>"
+>
+    <i class="bi bi-clock-history"></i>
 
-            <i
-                class="bi
-                       bi-clock-history"
-            ></i>
-
-            <span>
-                Leave History
-            </span>
-
-            <small>
-                Soon
-            </small>
-
-        </a>
+    <span>
+        Leave History
+    </span>
+</a>
 
 
         <div class="nav-section-title">
