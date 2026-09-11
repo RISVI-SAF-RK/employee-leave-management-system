@@ -2,19 +2,22 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ .
-    '/../includes/role_check.php';
+require_once __DIR__
+    . '/../includes/role_check.php';
 
 requireRole('Administrator');
 
-require_once __DIR__ .
-    '/../includes/functions.php';
+require_once __DIR__
+    . '/../includes/functions.php';
 
-require_once __DIR__ .
-    '/../config/database.php';
+require_once __DIR__
+    . '/../config/database.php';
 
 
 $error = '';
+
+$departmentName = '';
+$description = '';
 
 
 /*
@@ -31,9 +34,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     |--------------------------------------------------------------------------
     */
 
+    $csrfToken =
+        $_POST['csrf_token']
+        ?? null;
+
+
     if (
+        !is_string(
+            $csrfToken
+        )
+        ||
         !verifyCsrfToken(
-            $_POST['csrf_token'] ?? null
+            $csrfToken
         )
     ) {
 
@@ -51,18 +63,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     |--------------------------------------------------------------------------
     */
 
+    $departmentNameInput =
+        $_POST['department_name']
+        ?? '';
+
+
     $departmentName =
-        trim(
-            $_POST['department_name']
-            ?? ''
-        );
+        is_string(
+            $departmentNameInput
+        )
+            ? trim(
+                $departmentNameInput
+            )
+            : '';
+
+
+    $descriptionInput =
+        $_POST['description']
+        ?? '';
 
 
     $description =
-        trim(
-            $_POST['description']
-            ?? ''
-        );
+        is_string(
+            $descriptionInput
+        )
+            ? trim(
+                $descriptionInput
+            )
+            : '';
 
 
     /*
@@ -78,11 +106,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
     } elseif (
-        strlen($departmentName) > 100
+        strlen(
+            $departmentName
+        ) > 100
     ) {
 
         $error =
-            'Department name is too long.';
+            'Department name cannot exceed 100 characters.';
+
+
+    } elseif (
+        strlen(
+            $description
+        ) > 255
+    ) {
+
+        $error =
+            'Description cannot exceed 255 characters.';
 
 
     } else {
@@ -205,8 +245,8 @@ $pageTitle =
     'Add Department';
 
 
-require_once __DIR__ .
-    '/../includes/admin/header.php';
+require_once __DIR__
+    . '/../includes/admin/header.php';
 
 ?>
 
@@ -262,9 +302,7 @@ require_once __DIR__ .
                     required
                     class="form-control"
                     value="<?= escape(
-                        $_POST[
-                            'department_name'
-                        ] ?? ''
+                        $departmentName
                     ) ?>"
                 >
 
@@ -288,8 +326,7 @@ require_once __DIR__ .
                     class="form-control"
                     rows="3"
                 ><?= escape(
-                    $_POST['description']
-                    ?? ''
+                    $description
                 ) ?></textarea>
 
             </div>
@@ -319,5 +356,5 @@ require_once __DIR__ .
 
 <?php
 
-require_once __DIR__ .
-    '/../includes/admin/footer.php';
+require_once __DIR__
+    . '/../includes/admin/footer.php';
