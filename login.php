@@ -9,6 +9,35 @@ require_once __DIR__ . '/config/database.php';
 
 /*
 |--------------------------------------------------------------------------
+| Login Security Settings
+|--------------------------------------------------------------------------
+|
+| This is a lightweight session-based login throttle.
+| Five failed attempts will temporarily block further attempts for 60 seconds.
+|
+*/
+
+const LOGIN_MAX_ATTEMPTS = 5;
+const LOGIN_LOCK_SECONDS = 60;
+
+
+/*
+|--------------------------------------------------------------------------
+| Prevent Login Page Caching
+|--------------------------------------------------------------------------
+*/
+
+header(
+    'Cache-Control: no-store, no-cache, must-revalidate'
+);
+
+header(
+    'Pragma: no-cache'
+);
+
+
+/*
+|--------------------------------------------------------------------------
 | Already Logged In
 |--------------------------------------------------------------------------
 */
@@ -21,12 +50,76 @@ if (
 ) {
 
     redirectByRole(
-        $_SESSION['role']
+        (string)$_SESSION['role']
     );
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| Login CSRF Token
+|--------------------------------------------------------------------------
+*/
+
+if (
+    empty(
+        $_SESSION['login_csrf_token']
+    )
+    ||
+    !is_string(
+        $_SESSION['login_csrf_token']
+    )
+) {
+
+    $_SESSION['login_csrf_token'] =
+        bin2hex(
+            random_bytes(32)
+        );
+}
+
+
+$loginCsrfToken =
+    $_SESSION['login_csrf_token'];
+
+
+/*
+|--------------------------------------------------------------------------
+| Login Attempt State
+|--------------------------------------------------------------------------
+*/
+
+$failedAttempts =
+    (int)(
+        $_SESSION['login_failed_attempts']
+        ?? 0
+    );
+
+
+$lockedUntil =
+    (int)(
+        $_SESSION['login_locked_until']
+        ?? 0
+    );
+
+
+if (
+    $lockedUntil > 0
+    &&
+    $lockedUntil <= time()
+) {
+
+    unset(
+        $_SESSION['login_failed_attempts'],
+        $_SESSION['login_locked_until']
+    );
+
+    $failedAttempts = 0;
+    $lockedUntil = 0;
+}
+
+
 $error = '';
+$email = '';
 
 
 /*
@@ -40,16 +133,88 @@ if (
     === 'POST'
 ) {
 
+    $emailInput =
+        $_POST['email']
+        ?? '';
+
+
+    $passwordInput =
+        $_POST['password']
+        ?? '';
+
+
+    $csrfInput =
+        $_POST['csrf_token']
+        ?? '';
+
+
     $email =
-        trim(
-            $_POST['email']
-            ?? ''
-        );
+        is_string(
+            $emailInput
+        )
+            ? trim(
+                $emailInput
+            )
+            : '';
 
 
     $password =
-        $_POST['password']
-        ?? '';
+        is_string(
+            $passwordInput
+        )
+            ? $passwordInput
+            : '';
+
+
+    $submittedCsrfToken =
+        is_string(
+            $csrfInput
+        )
+            ? $csrfInput
+            : '';
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CSRF Validation
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+        $submittedCsrfToken === ''
+        ||
+        !hash_equals(
+            $loginCsrfToken,
+            $submittedCsrfToken
+        )
+    ) {
+
+        $error =
+            'Your sign-in session expired. Please refresh the page and try again.';
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Temporary Login Lock
+    |--------------------------------------------------------------------------
+    */
+
+    } elseif (
+        $lockedUntil > time()
+    ) {
+
+        $remainingSeconds =
+            max(
+                1,
+                $lockedUntil
+                - time()
+            );
+
+
+        $error =
+            'Too many failed sign-in attempts. Please wait '
+            . $remainingSeconds
+            . ' second(s) and try again.';
 
 
     /*
@@ -58,7 +223,7 @@ if (
     |--------------------------------------------------------------------------
     */
 
-    if (
+    } elseif (
         $email === ''
         ||
         $password === ''
@@ -123,9 +288,24 @@ if (
 
             /*
             |--------------------------------------------------------------------------
-            | Verify Account And Password
+            | Verify Password
             |--------------------------------------------------------------------------
+            |
+            | Inactive accounts receive the same public error as incorrect
+            | credentials so the login page does not reveal account status.
+            |
             */
+
+            $passwordMatches =
+                $user
+                &&
+                password_verify(
+                    $password,
+                    (string)$user[
+                        'password_hash'
+                    ]
+                );
+
 
             if (
                 $user
@@ -133,12 +313,7 @@ if (
                 $user['status']
                     === 'Active'
                 &&
-                password_verify(
-                    $password,
-                    $user[
-                        'password_hash'
-                    ]
-                )
+                $passwordMatches
             ) {
 
                 /*
@@ -159,15 +334,32 @@ if (
 
 
                 $_SESSION['email'] =
-                    $user[
+                    (string)$user[
                         'email'
                     ];
 
 
                 $_SESSION['role'] =
-                    $user[
+                    (string)$user[
                         'role_name'
                     ];
+
+
+                $_SESSION['authenticated_at'] =
+                    time();
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Clear Login Throttle And Login CSRF Data
+                |--------------------------------------------------------------------------
+                */
+
+                unset(
+                    $_SESSION['login_failed_attempts'],
+                    $_SESSION['login_locked_until'],
+                    $_SESSION['login_csrf_token']
+                );
 
 
                 /*
@@ -220,7 +412,7 @@ if (
                 */
 
                 redirectByRole(
-                    $user[
+                    (string)$user[
                         'role_name'
                     ]
                 );
@@ -230,12 +422,68 @@ if (
 
                 /*
                 |--------------------------------------------------------------------------
-                | Invalid Login
+                | Failed Login Attempt
                 |--------------------------------------------------------------------------
                 */
 
-                $error =
-                    'Invalid email or password.';
+                $failedAttempts++;
+
+
+                $_SESSION[
+                    'login_failed_attempts'
+                ] =
+                    $failedAttempts;
+
+
+                if (
+                    $failedAttempts
+                    >= LOGIN_MAX_ATTEMPTS
+                ) {
+
+                    $lockedUntil =
+                        time()
+                        + LOGIN_LOCK_SECONDS;
+
+
+                    $_SESSION[
+                        'login_locked_until'
+                    ] =
+                        $lockedUntil;
+
+
+                    $error =
+                        'Too many failed sign-in attempts. Please wait '
+                        . LOGIN_LOCK_SECONDS
+                        . ' seconds and try again.';
+
+
+                } else {
+
+                    $error =
+                        'Invalid email or password.';
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Audit Failed Login
+                |--------------------------------------------------------------------------
+                |
+                | Do not record the password or other secrets.
+                |
+                */
+
+                logAudit(
+                    $pdo,
+                    'LOGIN_FAILED',
+                    'user',
+                    $user
+                        ? (int)$user[
+                            'user_id'
+                        ]
+                        : null,
+                    'Failed ELMS sign-in attempt.'
+                );
             }
 
 
@@ -318,8 +566,16 @@ if (
         <form
             method="POST"
             action=""
-            autocomplete="off"
         >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="<?= escape(
+                    $loginCsrfToken
+                ) ?>"
+            >
+
 
             <div class="form-group">
 
@@ -333,12 +589,10 @@ if (
                     id="email"
                     name="email"
                     required
+                    maxlength="255"
                     autocomplete="username"
                     value="<?= escape(
-                        $_POST[
-                            'email'
-                        ]
-                        ?? ''
+                        $email
                     ) ?>"
                 >
 
