@@ -37,10 +37,18 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 |--------------------------------------------------------------------------
 */
 
+$csrfToken =
+    $_POST['csrf_token']
+    ?? null;
+
+
 if (
+    !is_string(
+        $csrfToken
+    )
+    ||
     !verifyCsrfToken(
-        $_POST['csrf_token']
-        ?? null
+        $csrfToken
     )
 ) {
 
@@ -66,16 +74,32 @@ $applicationId =
     );
 
 
-$decision =
+$decisionInput =
     $_POST['decision']
     ?? '';
 
 
+$decision =
+    is_string(
+        $decisionInput
+    )
+        ? $decisionInput
+        : '';
+
+
+$commentInput =
+    $_POST['comment']
+    ?? '';
+
+
 $comment =
-    trim(
-        $_POST['comment']
-        ?? ''
-    );
+    is_string(
+        $commentInput
+    )
+        ? trim(
+            $commentInput
+        )
+        : '';
 
 
 if (!$applicationId) {
