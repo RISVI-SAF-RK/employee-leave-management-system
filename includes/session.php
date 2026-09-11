@@ -2,6 +2,33 @@
 
 declare(strict_types=1);
 
+/*
+|--------------------------------------------------------------------------
+| Production Error Handling
+|--------------------------------------------------------------------------
+|
+| Report all PHP errors internally, but never expose technical details
+| to website users. Railway can capture logged errors.
+|
+*/
+
+error_reporting(E_ALL);
+
+ini_set(
+    'display_errors',
+    '0'
+);
+
+ini_set(
+    'display_startup_errors',
+    '0'
+);
+
+ini_set(
+    'log_errors',
+    '1'
+);
+
 
 /*
 |--------------------------------------------------------------------------
