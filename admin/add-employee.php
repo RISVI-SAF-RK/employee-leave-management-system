@@ -90,15 +90,53 @@ $roles =
 
 /*
 |--------------------------------------------------------------------------
+| Safe Form Values
+|--------------------------------------------------------------------------
+|
+| Keep scalar values for validation and form repopulation. This prevents
+| malformed array inputs from causing TypeError exceptions with strict_types.
+|
+*/
+
+$employeeCode = '';
+$firstName = '';
+$lastName = '';
+$email = '';
+$phone = '';
+$jobTitle = '';
+$dateJoined = '';
+
+$departmentInput = '';
+$roleInput = '';
+$managerInput = '';
+
+
+/*
+|--------------------------------------------------------------------------
 | Form Submission
 |--------------------------------------------------------------------------
 */
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+    /*
+    |--------------------------------------------------------------------------
+    | CSRF
+    |--------------------------------------------------------------------------
+    */
+
+    $csrfToken =
+        $_POST['csrf_token']
+        ?? null;
+
+
     if (
+        !is_string(
+            $csrfToken
+        )
+        ||
         !verifyCsrfToken(
-            $_POST['csrf_token'] ?? null
+            $csrfToken
         )
     ) {
 
@@ -110,72 +148,248 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
 
-    $employeeCode = strtoupper(
-        trim(
-            $_POST['employee_code']
-            ?? ''
-        )
-    );
+    /*
+    |--------------------------------------------------------------------------
+    | Normalize Scalar Inputs
+    |--------------------------------------------------------------------------
+    */
 
-    $firstName = trim(
+    $employeeCodeInput =
+        $_POST['employee_code']
+        ?? '';
+
+
+    $employeeCode =
+        is_string(
+            $employeeCodeInput
+        )
+            ? strtoupper(
+                trim(
+                    $employeeCodeInput
+                )
+            )
+            : '';
+
+
+    $firstNameInput =
         $_POST['first_name']
-        ?? ''
-    );
+        ?? '';
 
-    $lastName = trim(
-        $_POST['last_name']
-        ?? ''
-    );
 
-    $email = strtolower(
-        trim(
-            $_POST['email']
-            ?? ''
+    $firstName =
+        is_string(
+            $firstNameInput
         )
-    );
+            ? trim(
+                $firstNameInput
+            )
+            : '';
 
-    $phone = trim(
+
+    $lastNameInput =
+        $_POST['last_name']
+        ?? '';
+
+
+    $lastName =
+        is_string(
+            $lastNameInput
+        )
+            ? trim(
+                $lastNameInput
+            )
+            : '';
+
+
+    $emailInput =
+        $_POST['email']
+        ?? '';
+
+
+    $email =
+        is_string(
+            $emailInput
+        )
+            ? strtolower(
+                trim(
+                    $emailInput
+                )
+            )
+            : '';
+
+
+    $phoneInput =
         $_POST['phone']
-        ?? ''
-    );
+        ?? '';
 
-    $jobTitle = trim(
+
+    $phone =
+        is_string(
+            $phoneInput
+        )
+            ? trim(
+                $phoneInput
+            )
+            : '';
+
+
+    $jobTitleInput =
         $_POST['job_title']
-        ?? ''
-    );
+        ?? '';
 
-    $dateJoined =
+
+    $jobTitle =
+        is_string(
+            $jobTitleInput
+        )
+            ? trim(
+                $jobTitleInput
+            )
+            : '';
+
+
+    $dateJoinedInput =
         $_POST['date_joined']
         ?? '';
 
+
+    $dateJoined =
+        is_string(
+            $dateJoinedInput
+        )
+            ? trim(
+                $dateJoinedInput
+            )
+            : '';
+
+
+    $departmentRaw =
+        $_POST['department_id']
+        ?? '';
+
+
+    $departmentInput =
+        is_string(
+            $departmentRaw
+        )
+            ? trim(
+                $departmentRaw
+            )
+            : '';
+
+
     $departmentId =
         filter_var(
-            $_POST['department_id']
-            ?? null,
+            $departmentInput,
             FILTER_VALIDATE_INT
         );
+
+
+    $roleRaw =
+        $_POST['role_id']
+        ?? '';
+
+
+    $roleInput =
+        is_string(
+            $roleRaw
+        )
+            ? trim(
+                $roleRaw
+            )
+            : '';
+
 
     $roleId =
         filter_var(
-            $_POST['role_id']
-            ?? null,
+            $roleInput,
             FILTER_VALIDATE_INT
         );
+
+
+    $managerRaw =
+        $_POST['manager_id']
+        ?? '';
+
+
+    $managerInput =
+        is_string(
+            $managerRaw
+        )
+            ? trim(
+                $managerRaw
+            )
+            : '';
+
 
     $managerId =
-        filter_var(
-            $_POST['manager_id']
-            ?? null,
-            FILTER_VALIDATE_INT
-        );
+        $managerInput !== ''
+            ? filter_var(
+                $managerInput,
+                FILTER_VALIDATE_INT
+            )
+            : null;
 
-    $password =
+
+    $passwordInput =
         $_POST['password']
         ?? '';
 
-    $confirmPassword =
+
+    $password =
+        is_string(
+            $passwordInput
+        )
+            ? $passwordInput
+            : '';
+
+
+    $confirmPasswordInput =
         $_POST['confirm_password']
         ?? '';
+
+
+    $confirmPassword =
+        is_string(
+            $confirmPasswordInput
+        )
+            ? $confirmPasswordInput
+            : '';
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Exact Date Validation Helper
+    |--------------------------------------------------------------------------
+    */
+
+    $dateJoinedObject =
+        DateTimeImmutable::createFromFormat(
+            '!Y-m-d',
+            $dateJoined
+        );
+
+
+    $dateJoinedErrors =
+        DateTimeImmutable::getLastErrors();
+
+
+    $dateJoinedIsValid =
+        $dateJoinedObject
+        instanceof DateTimeImmutable
+        &&
+        $dateJoinedObject->format('Y-m-d')
+            === $dateJoined
+        &&
+        (
+            $dateJoinedErrors === false
+            ||
+            (
+                ($dateJoinedErrors['warning_count'] ?? 0) === 0
+                &&
+                ($dateJoinedErrors['error_count'] ?? 0) === 0
+            )
+        );
 
 
     /*
@@ -185,18 +399,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     */
 
     if (
-        $employeeCode === '' ||
-        $firstName === '' ||
-        $lastName === '' ||
-        $email === '' ||
-        $jobTitle === '' ||
-        $dateJoined === '' ||
-        !$departmentId ||
+        $employeeCode === ''
+        ||
+        $firstName === ''
+        ||
+        $lastName === ''
+        ||
+        $email === ''
+        ||
+        $jobTitle === ''
+        ||
+        $dateJoined === ''
+        ||
+        !$departmentId
+        ||
         !$roleId
     ) {
 
         $error =
             'Please complete all required fields.';
+
+    } elseif (
+        strlen(
+            $employeeCode
+        ) > 30
+        ||
+        strlen(
+            $firstName
+        ) > 100
+        ||
+        strlen(
+            $lastName
+        ) > 100
+        ||
+        strlen(
+            $email
+        ) > 150
+        ||
+        strlen(
+            $phone
+        ) > 20
+        ||
+        strlen(
+            $jobTitle
+        ) > 100
+    ) {
+
+        $error =
+            'One or more fields exceed the allowed length.';
 
     } elseif (
         !filter_var(
@@ -209,11 +459,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'Please enter a valid email address.';
 
     } elseif (
-        strlen($password) < 8
+        strlen(
+            $password
+        ) < 8
     ) {
 
         $error =
             'Password must contain at least 8 characters.';
+
+    } elseif (
+        strlen(
+            $password
+        ) > 255
+    ) {
+
+        $error =
+            'Password cannot exceed 255 characters.';
 
     } elseif (
         $password !==
@@ -224,8 +485,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'Passwords do not match.';
 
     } elseif (
-        strtotime($dateJoined)
-        > time()
+        !$dateJoinedIsValid
+    ) {
+
+        $error =
+            'Please enter a valid date joined.';
+
+    } elseif (
+        $dateJoinedObject
+        >
+        new DateTimeImmutable(
+            'today'
+        )
     ) {
 
         $error =
@@ -759,9 +1030,7 @@ require_once __DIR__ .
                                        professional-input"
                                 placeholder="EMP001"
                                 value="<?= escape(
-                                    $_POST[
-                                        'employee_code'
-                                    ] ?? ''
+                                    $employeeCode
                                 ) ?>"
                             >
 
@@ -787,9 +1056,7 @@ require_once __DIR__ .
                                 class="form-control
                                        professional-input"
                                 value="<?= escape(
-                                    $_POST[
-                                        'first_name'
-                                    ] ?? ''
+                                    $firstName
                                 ) ?>"
                             >
 
@@ -815,9 +1082,7 @@ require_once __DIR__ .
                                 class="form-control
                                        professional-input"
                                 value="<?= escape(
-                                    $_POST[
-                                        'last_name'
-                                    ] ?? ''
+                                    $lastName
                                 ) ?>"
                             >
 
@@ -844,8 +1109,7 @@ require_once __DIR__ .
                                 class="form-control
                                        professional-input"
                                 value="<?= escape(
-                                    $_POST['email']
-                                    ?? ''
+                                    $email
                                 ) ?>"
                             >
 
@@ -867,8 +1131,7 @@ require_once __DIR__ .
                                 class="form-control
                                        professional-input"
                                 value="<?= escape(
-                                    $_POST['phone']
-                                    ?? ''
+                                    $phone
                                 ) ?>"
                             >
 
@@ -939,11 +1202,9 @@ require_once __DIR__ .
                                     <option
                                         value="<?= (int)$department['department_id'] ?>"
                                         <?= (
-                                            ($_POST[
-                                                'department_id'
-                                            ] ?? '')
-                                            ==
-                                            $department[
+                                            $departmentInput
+                                            ===
+                                            (string)$department[
                                                 'department_id'
                                             ]
                                         )
@@ -998,6 +1259,16 @@ require_once __DIR__ .
                                         data-role="<?= escape(
                                             $role['role_name']
                                         ) ?>"
+                                        <?= (
+                                            $roleInput
+                                            ===
+                                            (string)$role[
+                                                'role_id'
+                                            ]
+                                        )
+                                            ? 'selected'
+                                            : ''
+                                        ?>
                                     >
                                         <?= escape(
                                             $role['role_name']
@@ -1031,9 +1302,7 @@ require_once __DIR__ .
                                        professional-input"
                                 placeholder="Software Engineer"
                                 value="<?= escape(
-                                    $_POST[
-                                        'job_title'
-                                    ] ?? ''
+                                    $jobTitle
                                 ) ?>"
                             >
 
@@ -1059,9 +1328,7 @@ require_once __DIR__ .
                                 class="form-control
                                        professional-input"
                                 value="<?= escape(
-                                    $_POST[
-                                        'date_joined'
-                                    ] ?? ''
+                                    $dateJoined
                                 ) ?>"
                             >
 
@@ -1097,6 +1364,16 @@ require_once __DIR__ .
 
                                     <option
                                         value="<?= (int)$manager['employee_id'] ?>"
+                                        <?= (
+                                            $managerInput
+                                            ===
+                                            (string)$manager[
+                                                'employee_id'
+                                            ]
+                                        )
+                                            ? 'selected'
+                                            : ''
+                                        ?>
                                     >
                                         <?= escape(
                                             $manager[
