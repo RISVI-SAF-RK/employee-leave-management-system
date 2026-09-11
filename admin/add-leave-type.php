@@ -12,34 +12,77 @@ $pageTitle = 'Add Leave Type';
 
 $error = '';
 
+$leaveTypeName = '';
+$description = '';
+$isPaidRaw = '';
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+    $csrfToken =
+        $_POST['csrf_token']
+        ?? null;
+
+
     if (
+        !is_string(
+            $csrfToken
+        )
+        ||
         !verifyCsrfToken(
-            $_POST['csrf_token'] ?? null
+            $csrfToken
         )
     ) {
 
         http_response_code(403);
 
-        exit('Invalid security token.');
+        exit(
+            'Invalid security token.'
+        );
     }
 
 
-    $leaveTypeName = trim(
+    $leaveTypeNameInput =
         $_POST['leave_type_name']
-        ?? ''
-    );
+        ?? '';
 
-    $description = trim(
+
+    $leaveTypeName =
+        is_string(
+            $leaveTypeNameInput
+        )
+            ? trim(
+                $leaveTypeNameInput
+            )
+            : '';
+
+
+    $descriptionInput =
         $_POST['description']
-        ?? ''
-    );
+        ?? '';
 
-    $isPaidRaw =
+
+    $description =
+        is_string(
+            $descriptionInput
+        )
+            ? trim(
+                $descriptionInput
+            )
+            : '';
+
+
+    $isPaidInput =
         $_POST['is_paid']
         ?? '';
+
+
+    $isPaidRaw =
+        is_string(
+            $isPaidInput
+        )
+            ? $isPaidInput
+            : '';
 
 
     if ($leaveTypeName === '') {
@@ -328,9 +371,7 @@ require_once __DIR__ .
                                    professional-input"
                             placeholder="Example: Study Leave"
                             value="<?= escape(
-                                $_POST[
-                                    'leave_type_name'
-                                ] ?? ''
+                                $leaveTypeName
                             ) ?>"
                         >
 
@@ -362,9 +403,7 @@ require_once __DIR__ .
                                    professional-input"
                             placeholder="Describe when this leave type should be used..."
                         ><?= escape(
-                            $_POST[
-                                'description'
-                            ] ?? ''
+                            $description
                         ) ?></textarea>
 
                     </div>
@@ -399,8 +438,7 @@ require_once __DIR__ .
                                         value="1"
                                         required
                                         <?= (
-                                            ($_POST['is_paid']
-                                                ?? '')
+                                            $isPaidRaw
                                             === '1'
                                         )
                                             ? 'checked'
@@ -454,8 +492,7 @@ require_once __DIR__ .
                                         value="0"
                                         required
                                         <?= (
-                                            ($_POST['is_paid']
-                                                ?? '')
+                                            $isPaidRaw
                                             === '0'
                                         )
                                             ? 'checked'
