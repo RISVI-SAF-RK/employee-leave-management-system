@@ -21,7 +21,10 @@ requireRole('Administrator');
 |--------------------------------------------------------------------------
 */
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+if (
+    $_SERVER['REQUEST_METHOD']
+    !== 'POST'
+) {
 
     header(
         'Location: /admin/leave-balances.php'
@@ -37,16 +40,26 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 |--------------------------------------------------------------------------
 */
 
+$csrfToken =
+    $_POST['csrf_token']
+    ?? null;
+
+
 if (
+    !is_string(
+        $csrfToken
+    )
+    ||
     !verifyCsrfToken(
-        $_POST['csrf_token']
-        ?? null
+        $csrfToken
     )
 ) {
 
     http_response_code(403);
 
-    exit('Invalid security token.');
+    exit(
+        'Invalid security token.'
+    );
 }
 
 
@@ -56,11 +69,20 @@ if (
 |--------------------------------------------------------------------------
 */
 
-$balanceYear = filter_input(
-    INPUT_POST,
-    'balance_year',
-    FILTER_VALIDATE_INT
-);
+$balanceYearInput =
+    $_POST['balance_year']
+    ?? null;
+
+
+$balanceYear =
+    is_string(
+        $balanceYearInput
+    )
+        ? filter_var(
+            $balanceYearInput,
+            FILTER_VALIDATE_INT
+        )
+        : false;
 
 
 if (
@@ -88,30 +110,53 @@ try {
 
     /*
     |--------------------------------------------------------------------------
+    | Begin Transaction
+    |--------------------------------------------------------------------------
+    |
+    | Balance initialization is handled as one unit so that partial batches
+    | are not left behind if any insert fails.
+    |
+    */
+
+    $pdo->beginTransaction();
+
+
+    /*
+    |--------------------------------------------------------------------------
     | Load Active Employees
     |--------------------------------------------------------------------------
     */
 
-    $employeeStmt = $pdo->query(
-        "SELECT
-            e.employee_id
+    $employeeStmt =
+        $pdo->query(
+            "SELECT
+                e.employee_id
 
-         FROM employees e
+             FROM employees e
 
-         INNER JOIN users u
-            ON e.user_id = u.user_id
+             INNER JOIN users u
+                ON e.user_id =
+                   u.user_id
 
-         INNER JOIN roles r
-            ON u.role_id = r.role_id
+             INNER JOIN roles r
+                ON u.role_id =
+                   r.role_id
 
-         WHERE
-            e.status = 'Active'
-            AND u.status = 'Active'
-            AND r.role_name IN (
-                'Employee',
-                'Manager'
-            )"
-    );
+             WHERE
+                e.status =
+                    'Active'
+
+                AND u.status =
+                    'Active'
+
+                AND r.role_name IN (
+                    'Employee',
+                    'Manager'
+                )
+
+             ORDER BY
+                e.employee_id"
+        );
 
 
     $employees =
@@ -124,23 +169,30 @@ try {
     |--------------------------------------------------------------------------
     */
 
-    $policyStmt = $pdo->query(
-        "SELECT
-            lp.leave_type_id,
-            lp.days_per_year,
-            lp.carry_forward_allowed,
-            lp.max_carry_forward_days
+    $policyStmt =
+        $pdo->query(
+            "SELECT
+                lp.leave_type_id,
+                lp.days_per_year,
+                lp.carry_forward_allowed,
+                lp.max_carry_forward_days
 
-         FROM leave_policies lp
+             FROM leave_policies lp
 
-         INNER JOIN leave_types lt
-            ON lp.leave_type_id =
-               lt.leave_type_id
+             INNER JOIN leave_types lt
+                ON lp.leave_type_id =
+                   lt.leave_type_id
 
-         WHERE
-            lp.status = 'Active'
-            AND lt.status = 'Active'"
-    );
+             WHERE
+                lp.status =
+                    'Active'
+
+                AND lt.status =
+                    'Active'
+
+             ORDER BY
+                lp.leave_type_id"
+        );
 
 
     $policies =
@@ -171,7 +223,8 @@ try {
 
     $existingStmt =
         $pdo->prepare(
-            "SELECT balance_id
+            "SELECT
+                balance_id
 
              FROM leave_balances
 
@@ -185,13 +238,16 @@ try {
                 AND balance_year =
                     :balance_year
 
-             LIMIT 1"
+             LIMIT 1
+
+             FOR UPDATE"
         );
 
 
     $previousStmt =
         $pdo->prepare(
-            "SELECT remaining_days
+            "SELECT
+                remaining_days
 
              FROM leave_balances
 
@@ -205,7 +261,9 @@ try {
                 AND balance_year =
                     :balance_year
 
-             LIMIT 1"
+             LIMIT 1
+
+             FOR UPDATE"
         );
 
 
@@ -246,17 +304,21 @@ try {
         $balanceYear - 1;
 
 
-    $pdo->beginTransaction();
+    foreach (
+        $employees
+        as $employee
+    ) {
 
-
-    foreach ($employees as $employee) {
-
-        foreach ($policies as $policy) {
+        foreach (
+            $policies
+            as $policy
+        ) {
 
             $employeeId =
                 (int)$employee[
                     'employee_id'
                 ];
+
 
             $leaveTypeId =
                 (int)$policy[
@@ -266,7 +328,7 @@ try {
 
             /*
             |--------------------------------------------------------------------------
-            | Don't overwrite an existing balance
+            | Don't Overwrite An Existing Balance
             |--------------------------------------------------------------------------
             */
 
@@ -283,7 +345,9 @@ try {
             ]);
 
 
-            if ($existingStmt->fetch()) {
+            if (
+                $existingStmt->fetch()
+            ) {
 
                 $skippedCount++;
 
@@ -298,9 +362,12 @@ try {
             */
 
             $baseEntitlement =
-                (float)$policy[
-                    'days_per_year'
-                ];
+                max(
+                    0,
+                    (float)$policy[
+                        'days_per_year'
+                    ]
+                );
 
 
             /*
@@ -309,7 +376,8 @@ try {
             |--------------------------------------------------------------------------
             */
 
-            $carryForward = 0.00;
+            $carryForward =
+                0.00;
 
 
             if (
@@ -409,8 +477,41 @@ try {
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | Commit
+    |--------------------------------------------------------------------------
+    */
+
     $pdo->commit();
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Audit Initialization
+    |--------------------------------------------------------------------------
+    */
+
+    logAudit(
+        $pdo,
+        'LEAVE_BALANCES_INITIALIZED',
+        'leave_balance',
+        null,
+        'Initialized leave balances for '
+        . $balanceYear
+        . ': '
+        . $createdCount
+        . ' created, '
+        . $skippedCount
+        . ' existing balance(s) skipped.'
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Success
+    |--------------------------------------------------------------------------
+    */
 
     setFlash(
         'success',
@@ -423,7 +524,9 @@ try {
 
 } catch (Throwable $e) {
 
-    if ($pdo->inTransaction()) {
+    if (
+        $pdo->inTransaction()
+    ) {
 
         $pdo->rollBack();
     }
@@ -443,6 +546,12 @@ try {
     );
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| Redirect
+|--------------------------------------------------------------------------
+*/
 
 header(
     'Location: /admin/leave-balances.php?year='
