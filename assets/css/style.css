@@ -5899,3 +5899,150 @@ a.employee-quick-action:hover {
     }
 
 }
+/* =========================================================
+   MANAGER TEAM REPORTS
+   ========================================================= */
+
+.manager-report-bar {
+    background:
+        linear-gradient(
+            180deg,
+            #2dd4bf,
+            #0f766e
+        );
+}
+
+
+.team-report-approved {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 28px;
+
+    padding:
+        4px
+        7px;
+
+    border-radius: 999px;
+
+    background: #ecfdf5;
+
+    color: #15803d;
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+
+.team-report-days {
+    color: #0f766e;
+
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   APPROVAL OVERVIEW
+   ========================================================= */
+
+.team-report-status-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 24px;
+}
+
+
+.team-report-status-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 8px;
+}
+
+
+.team-report-status-heading span {
+    color: #475569;
+
+    font-size: 10px;
+    font-weight: 650;
+}
+
+
+.team-report-status-heading strong {
+    color: #334155;
+
+    font-size: 11px;
+}
+
+
+.team-report-progress {
+    width: 100%;
+    height: 9px;
+
+    overflow: hidden;
+
+    border-radius: 999px;
+
+    background: #eef2f7;
+}
+
+
+.team-report-progress > div {
+    height: 100%;
+
+    border-radius: inherit;
+
+    transition:
+        width .4s ease;
+}
+
+
+.team-report-progress
+.approved {
+    background:
+        linear-gradient(
+            90deg,
+            #22c55e,
+            #16a34a
+        );
+}
+
+
+.team-report-progress
+.pending {
+    background:
+        linear-gradient(
+            90deg,
+            #fbbf24,
+            #d97706
+        );
+}
+
+
+.team-report-progress
+.rejected {
+    background:
+        linear-gradient(
+            90deg,
+            #f87171,
+            #dc2626
+        );
+}
+
+
+/* =========================================================
+   TEAM REPORT MOBILE
+   ========================================================= */
+
+@media (max-width: 767.98px) {
+
+    .team-report-status-list {
+        gap: 19px;
+    }
+
+}

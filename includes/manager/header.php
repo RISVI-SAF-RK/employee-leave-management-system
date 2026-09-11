@@ -314,21 +314,18 @@ $avatarLetter =
 
 
         <a
-            href="#"
-            class="sidebar-link
-                   sidebar-link-disabled"
-        >
+    href="/manager/team-reports.php"
+    class="sidebar-link
+    <?= $isActive([
+        'team-reports.php'
+    ]) ?>"
+>
+    <i class="bi bi-bar-chart-fill"></i>
 
-            <i
-                class="bi
-                       bi-bar-chart-fill"
-            ></i>
-
-            <span>
-                Team Reports
-            </span>
-
-        </a>
+    <span>
+        Team Reports
+    </span>
+</a>
 
 
         <div class="nav-section-title">
