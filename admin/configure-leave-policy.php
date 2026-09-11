@@ -191,10 +191,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     |--------------------------------------------------------------------------
     */
 
+    $csrfToken =
+        $_POST['csrf_token']
+        ?? null;
+
+
     if (
+        !is_string(
+            $csrfToken
+        )
+        ||
         !verifyCsrfToken(
-            $_POST['csrf_token']
-            ?? null
+            $csrfToken
         )
     ) {
 
@@ -212,53 +220,96 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     |--------------------------------------------------------------------------
     */
 
+    $daysPerYearInput =
+        $_POST['days_per_year']
+        ?? '';
+
+
     $formData['days_per_year'] =
-        trim(
-            $_POST[
-                'days_per_year'
-            ] ?? ''
-        );
+        is_string(
+            $daysPerYearInput
+        )
+            ? trim(
+                $daysPerYearInput
+            )
+            : '';
+
+
+    $minimumServiceInput =
+        $_POST['minimum_service_months']
+        ?? '0';
 
 
     $formData[
         'minimum_service_months'
     ] =
-        trim(
-            $_POST[
-                'minimum_service_months'
-            ] ?? '0'
-        );
+        is_string(
+            $minimumServiceInput
+        )
+            ? trim(
+                $minimumServiceInput
+            )
+            : '';
+
+
+    $carryForwardInput =
+        $_POST['carry_forward_allowed']
+        ?? '0';
 
 
     $formData[
         'carry_forward_allowed'
     ] =
-        $_POST[
-            'carry_forward_allowed'
-        ] ?? '0';
+        is_string(
+            $carryForwardInput
+        )
+            ? $carryForwardInput
+            : '';
+
+
+    $maxCarryForwardInput =
+        $_POST['max_carry_forward_days']
+        ?? '0';
 
 
     $formData[
         'max_carry_forward_days'
     ] =
-        trim(
-            $_POST[
-                'max_carry_forward_days'
-            ] ?? '0'
-        );
+        is_string(
+            $maxCarryForwardInput
+        )
+            ? trim(
+                $maxCarryForwardInput
+            )
+            : '';
+
+
+    $requiresAttachmentInput =
+        $_POST['requires_attachment']
+        ?? '0';
 
 
     $formData[
         'requires_attachment'
     ] =
-        $_POST[
-            'requires_attachment'
-        ] ?? '0';
+        is_string(
+            $requiresAttachmentInput
+        )
+            ? $requiresAttachmentInput
+            : '';
+
+
+    $statusInput =
+        $_POST['status']
+        ?? 'Active';
 
 
     $formData['status'] =
-        $_POST['status']
-        ?? 'Active';
+        is_string(
+            $statusInput
+        )
+            ? $statusInput
+            : '';
 
 
     /*
