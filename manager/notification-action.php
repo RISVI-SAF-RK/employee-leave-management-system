@@ -15,7 +15,16 @@ require_once __DIR__
 requireRole('Manager');
 
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+/*
+|--------------------------------------------------------------------------
+| POST Only
+|--------------------------------------------------------------------------
+*/
+
+if (
+    $_SERVER['REQUEST_METHOD']
+    !== 'POST'
+) {
 
     header(
         'Location: /manager/notifications.php'
@@ -25,10 +34,24 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| CSRF Validation
+|--------------------------------------------------------------------------
+*/
+
+$csrfToken =
+    $_POST['csrf_token']
+    ?? null;
+
+
 if (
+    !is_string(
+        $csrfToken
+    )
+    ||
     !verifyCsrfToken(
-        $_POST['csrf_token']
-        ?? null
+        $csrfToken
     )
 ) {
 
@@ -40,14 +63,42 @@ if (
 }
 
 
-$action =
+/*
+|--------------------------------------------------------------------------
+| Action
+|--------------------------------------------------------------------------
+*/
+
+$actionInput =
     $_POST['action']
     ?? '';
 
 
-$returnStatus =
+$action =
+    is_string(
+        $actionInput
+    )
+        ? $actionInput
+        : '';
+
+
+/*
+|--------------------------------------------------------------------------
+| Return Filter
+|--------------------------------------------------------------------------
+*/
+
+$returnStatusInput =
     $_POST['return_status']
     ?? 'All';
+
+
+$returnStatus =
+    is_string(
+        $returnStatusInput
+    )
+        ? $returnStatusInput
+        : 'All';
 
 
 if (
@@ -69,13 +120,22 @@ if (
 
 try {
 
-    if ($action === 'read_all') {
+    /*
+    |--------------------------------------------------------------------------
+    | Mark All
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+        $action === 'read_all'
+    ) {
 
         $stmt =
             $pdo->prepare(
                 "UPDATE notifications
 
-                 SET is_read = TRUE
+                 SET is_read =
+                    TRUE
 
                  WHERE
                     user_id =
@@ -100,6 +160,12 @@ try {
         );
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | Individual Notification
+    |--------------------------------------------------------------------------
+    */
+
     } elseif (
         in_array(
             $action,
@@ -111,15 +177,27 @@ try {
         )
     ) {
 
+        $notificationIdInput =
+            $_POST['notification_id']
+            ?? null;
+
+
         $notificationId =
-            filter_input(
-                INPUT_POST,
-                'notification_id',
-                FILTER_VALIDATE_INT
-            );
+            is_string(
+                $notificationIdInput
+            )
+                ? filter_var(
+                    $notificationIdInput,
+                    FILTER_VALIDATE_INT
+                )
+                : false;
 
 
-        if (!$notificationId) {
+        if (
+            !$notificationId
+            ||
+            $notificationId < 1
+        ) {
 
             throw new RuntimeException(
                 'Invalid notification.'
@@ -132,6 +210,12 @@ try {
                 ? 1
                 : 0;
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Update Only The Current User's Notification
+        |--------------------------------------------------------------------------
+        */
 
         $stmt =
             $pdo->prepare(
@@ -206,6 +290,12 @@ try {
     );
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| Redirect
+|--------------------------------------------------------------------------
+*/
 
 header(
     'Location: /manager/notifications.php?status='
