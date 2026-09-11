@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+
+/*
+|--------------------------------------------------------------------------
+| Escape HTML Output
+|--------------------------------------------------------------------------
+*/
+
 function escape(string $value): string
 {
     return htmlspecialchars(
@@ -11,81 +18,193 @@ function escape(string $value): string
     );
 }
 
-function redirectByRole(string $role): never
-{
+
+/*
+|--------------------------------------------------------------------------
+| Redirect User By Role
+|--------------------------------------------------------------------------
+*/
+
+function redirectByRole(
+    string $role
+): never {
+
     switch ($role) {
 
         case 'Administrator':
-            header('Location: /admin/dashboard.php');
+
+            header(
+                'Location: /admin/dashboard.php'
+            );
+
             break;
+
 
         case 'Manager':
-            header('Location: /manager/dashboard.php');
+
+            header(
+                'Location: /manager/dashboard.php'
+            );
+
             break;
+
 
         case 'Employee':
-            header('Location: /employee/dashboard.php');
+
+            header(
+                'Location: /employee/dashboard.php'
+            );
+
             break;
 
+
         default:
-            header('Location: /login.php');
+
+            header(
+                'Location: /login.php'
+            );
+
             break;
     }
+
 
     exit;
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| CSRF Token Generation
+|--------------------------------------------------------------------------
+*/
+
 function generateCsrfToken(): string
 {
     if (
-        empty($_SESSION['csrf_token']) ||
-        !is_string($_SESSION['csrf_token'])
+        empty(
+            $_SESSION['csrf_token']
+        )
+        ||
+        !is_string(
+            $_SESSION['csrf_token']
+        )
     ) {
-        $_SESSION['csrf_token'] = bin2hex(
-            random_bytes(32)
-        );
+
+        $_SESSION['csrf_token'] =
+            bin2hex(
+                random_bytes(32)
+            );
     }
 
-    return $_SESSION['csrf_token'];
+
+    return $_SESSION[
+        'csrf_token'
+    ];
 }
 
-function verifyCsrfToken(?string $token): bool
-{
+
+/*
+|--------------------------------------------------------------------------
+| CSRF Token Verification
+|--------------------------------------------------------------------------
+*/
+
+function verifyCsrfToken(
+    ?string $token
+): bool {
+
     if (
-        !isset($_SESSION['csrf_token']) ||
-        !is_string($token)
+        !isset(
+            $_SESSION['csrf_token']
+        )
+        ||
+        !is_string(
+            $_SESSION['csrf_token']
+        )
+        ||
+        !is_string(
+            $token
+        )
     ) {
+
         return false;
     }
 
+
     return hash_equals(
-        $_SESSION['csrf_token'],
+        $_SESSION[
+            'csrf_token'
+        ],
         $token
     );
 }
+
+
+/*
+|--------------------------------------------------------------------------
+| Flash Message
+|--------------------------------------------------------------------------
+*/
 
 function setFlash(
     string $type,
     string $message
 ): void {
+
     $_SESSION['flash'] = [
-        'type' => $type,
-        'message' => $message
+
+        'type' =>
+            $type,
+
+        'message' =>
+            $message
     ];
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| Get Flash Message
+|--------------------------------------------------------------------------
+*/
+
 function getFlash(): ?array
 {
-    if (!isset($_SESSION['flash'])) {
+    if (
+        !isset(
+            $_SESSION['flash']
+        )
+        ||
+        !is_array(
+            $_SESSION['flash']
+        )
+    ) {
+
         return null;
     }
 
-    $flash = $_SESSION['flash'];
 
-    unset($_SESSION['flash']);
+    $flash =
+        $_SESSION[
+            'flash'
+        ];
+
+
+    unset(
+        $_SESSION['flash']
+    );
+
 
     return $flash;
 }
+
+
+/*
+|--------------------------------------------------------------------------
+| Audit Logging
+|--------------------------------------------------------------------------
+*/
+
 function logAudit(
     PDO $pdo,
     string $action,
@@ -96,54 +215,118 @@ function logAudit(
 
     try {
 
+        /*
+        |--------------------------------------------------------------------------
+        | Current User
+        |--------------------------------------------------------------------------
+        */
+
         $userId =
-            isset($_SESSION['user_id'])
-                ? (int)$_SESSION['user_id']
+            isset(
+                $_SESSION['user_id']
+            )
+                ? (int)$_SESSION[
+                    'user_id'
+                ]
                 : null;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Limit Audit Field Lengths
+        |--------------------------------------------------------------------------
+        |
+        | Matches the audit_logs database column sizes.
+        |
+        */
+
+        $action =
+            substr(
+                $action,
+                0,
+                100
+            );
+
+
+        if (
+            $entityType !== null
+        ) {
+
+            $entityType =
+                substr(
+                    $entityType,
+                    0,
+                    60
+                );
+        }
+
+
+        if (
+            $description !== null
+        ) {
+
+            $description =
+                substr(
+                    $description,
+                    0,
+                    500
+                );
+        }
 
 
         /*
         |--------------------------------------------------------------------------
         | IP Address
         |--------------------------------------------------------------------------
+        |
+        | Do not directly trust HTTP_X_FORWARDED_FOR because it can be
+        | supplied or spoofed by a client.
+        |
+        | REMOTE_ADDR represents the network peer connected to PHP.
+        | Behind Railway this may sometimes be a proxy address, but that is
+        | safer than trusting an arbitrary forwarded header.
+        |
         */
 
         $ipAddress =
             $_SERVER[
-                'HTTP_X_FORWARDED_FOR'
-            ]
-            ??
-            $_SERVER[
                 'REMOTE_ADDR'
             ]
-            ??
-            null;
+            ?? null;
 
 
         if (
-            $ipAddress
-            &&
-            str_contains(
-                $ipAddress,
-                ','
+            is_string(
+                $ipAddress
             )
         ) {
 
-            $ipParts =
-                explode(
-                    ',',
+            $ipAddress =
+                trim(
                     $ipAddress
                 );
 
 
+            if (
+                !filter_var(
+                    $ipAddress,
+                    FILTER_VALIDATE_IP
+                )
+            ) {
+
+                $ipAddress =
+                    null;
+            }
+        } else {
+
             $ipAddress =
-                trim(
-                    $ipParts[0]
-                );
+                null;
         }
 
 
-        if ($ipAddress) {
+        if (
+            $ipAddress !== null
+        ) {
 
             $ipAddress =
                 substr(
@@ -167,7 +350,11 @@ function logAudit(
             ?? null;
 
 
-        if ($userAgent) {
+        if (
+            is_string(
+                $userAgent
+            )
+        ) {
 
             $userAgent =
                 substr(
@@ -175,23 +362,11 @@ function logAudit(
                     0,
                     255
                 );
-        }
 
+        } else {
 
-        /*
-        |--------------------------------------------------------------------------
-        | Description
-        |--------------------------------------------------------------------------
-        */
-
-        if ($description) {
-
-            $description =
-                substr(
-                    $description,
-                    0,
-                    500
-                );
+            $userAgent =
+                null;
         }
 
 
@@ -252,11 +427,13 @@ function logAudit(
         ]);
 
 
-    } catch (Throwable $e) {
+    } catch (
+        Throwable $e
+    ) {
 
         /*
         |--------------------------------------------------------------------------
-        | Audit failure must NOT break main business operation
+        | Audit Failure Must Not Break Main Business Operation
         |--------------------------------------------------------------------------
         */
 
