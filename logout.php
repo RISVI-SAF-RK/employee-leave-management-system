@@ -14,8 +14,11 @@ require_once __DIR__
 
 /*
 |--------------------------------------------------------------------------
-| Record Logout Before Destroying Session
+| Audit Logout
 |--------------------------------------------------------------------------
+|
+| Record the logout while the authenticated user's session still exists.
+|
 */
 
 if (
@@ -52,23 +55,44 @@ $_SESSION = [];
 */
 
 if (
+    session_status()
+    === PHP_SESSION_ACTIVE
+    &&
     ini_get(
         'session.use_cookies'
     )
 ) {
 
-    $params =
+    $cookieParams =
         session_get_cookie_params();
 
 
     setcookie(
         session_name(),
         '',
-        time() - 42000,
-        $params['path'],
-        $params['domain'],
-        $params['secure'],
-        $params['httponly']
+        [
+            'expires' =>
+                time() - 42000,
+
+            'path' =>
+                $cookieParams[
+                    'path'
+                ] ?: '/',
+
+            'domain' =>
+                $cookieParams[
+                    'domain'
+                ] ?? '',
+
+            'secure' =>
+                true,
+
+            'httponly' =>
+                true,
+
+            'samesite' =>
+                'Lax'
+        ]
     );
 }
 
@@ -79,12 +103,33 @@ if (
 |--------------------------------------------------------------------------
 */
 
-session_destroy();
+if (
+    session_status()
+    === PHP_SESSION_ACTIVE
+) {
+
+    session_destroy();
+}
 
 
 /*
 |--------------------------------------------------------------------------
-| Return To Login
+| Prevent Cached Authenticated Page Reuse
+|--------------------------------------------------------------------------
+*/
+
+header(
+    'Cache-Control: no-store, no-cache, must-revalidate'
+);
+
+header(
+    'Pragma: no-cache'
+);
+
+
+/*
+|--------------------------------------------------------------------------
+| Redirect to Login
 |--------------------------------------------------------------------------
 */
 
