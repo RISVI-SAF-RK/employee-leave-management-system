@@ -5684,3 +5684,218 @@ a.employee-quick-action:hover {
     }
 
 }
+/* =========================================================
+   REPORTS & ANALYTICS
+   ========================================================= */
+
+.report-kpi-card {
+    height: 100%;
+
+    padding: 19px;
+
+    border: 1px solid #e7ebf1;
+    border-radius: 15px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff,
+            #fafbff
+        );
+
+    box-shadow:
+        0 5px 18px
+        rgba(15, 23, 42, .04);
+
+    transition:
+        transform .2s,
+        box-shadow .2s;
+}
+
+
+.report-kpi-card:hover {
+    transform:
+        translateY(-3px);
+
+    box-shadow:
+        0 13px 28px
+        rgba(15, 23, 42, .07);
+}
+
+
+.report-kpi-card span {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #64748b;
+
+    font-size: 10px;
+    font-weight: 650;
+}
+
+
+.report-kpi-card strong {
+    display: block;
+
+    color: #1e293b;
+
+    font-size: 26px;
+    font-weight: 800;
+}
+
+
+.report-kpi-card small {
+    display: block;
+
+    margin-top: 4px;
+
+    color: #94a3b8;
+
+    font-size: 8px;
+}
+
+
+.report-kpi-card.pending {
+    border-top:
+        3px solid #f59e0b;
+}
+
+
+.report-kpi-card.approved {
+    border-top:
+        3px solid #22c55e;
+}
+
+
+.report-kpi-card.rejected {
+    border-top:
+        3px solid #ef4444;
+}
+
+
+.report-kpi-card.days {
+    border-top:
+        3px solid #6366f1;
+}
+
+
+/* =========================================================
+   MONTHLY BAR CHART
+   ========================================================= */
+
+.report-chart {
+    height: 260px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(12, 1fr);
+
+    align-items: end;
+
+    gap: 10px;
+
+    padding-top: 15px;
+}
+
+
+.report-chart-column {
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+
+.report-chart-value {
+    min-height: 18px;
+
+    margin-bottom: 5px;
+
+    color: #64748b;
+
+    font-size: 8px;
+    font-weight: 700;
+}
+
+
+.report-chart-track {
+    width: 100%;
+    max-width: 42px;
+    height: 190px;
+
+    display: flex;
+    align-items: flex-end;
+
+    overflow: hidden;
+
+    border-radius: 8px 8px 4px 4px;
+
+    background: #f1f5f9;
+}
+
+
+.report-chart-bar {
+    width: 100%;
+
+    min-height: 0;
+
+    border-radius:
+        8px
+        8px
+        3px
+        3px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #818cf8,
+            #4f46e5
+        );
+
+    transition:
+        height .4s ease,
+        filter .2s ease;
+}
+
+
+.report-chart-bar:hover {
+    filter:
+        brightness(.92);
+}
+
+
+.report-chart-column
+> span {
+    margin-top: 8px;
+
+    color: #64748b;
+
+    font-size: 8px;
+    font-weight: 600;
+}
+
+
+@media (max-width: 767.98px) {
+
+    .report-chart {
+        overflow-x: auto;
+
+        grid-template-columns:
+            repeat(
+                12,
+                minmax(38px, 1fr)
+            );
+
+        padding-bottom: 8px;
+    }
+
+
+    .report-chart-track {
+        height: 160px;
+    }
+
+}

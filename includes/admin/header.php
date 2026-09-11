@@ -267,17 +267,18 @@ $avatarLetter = strtoupper(
         </div>
 
         <a
-            href="#"
-            class="sidebar-link sidebar-link-disabled"
-        >
+    href="/admin/reports.php"
+    class="sidebar-link
+    <?= $isActive([
+        'reports.php'
+    ]) ?>"
+>
+    <i class="bi bi-bar-chart-fill"></i>
 
-            <i class="bi bi-bar-chart-fill"></i>
-
-            <span>
-                Reports
-            </span>
-
-        </a>
+    <span>
+        Reports
+    </span>
+</a>
 
     </nav>
 
