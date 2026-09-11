@@ -6,9 +6,20 @@ require_once __DIR__ . '/../includes/role_check.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../config/database.php';
 
+
 requireRole('Administrator');
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+
+/*
+|--------------------------------------------------------------------------
+| POST Only
+|--------------------------------------------------------------------------
+*/
+
+if (
+    $_SERVER['REQUEST_METHOD']
+    !== 'POST'
+) {
 
     header(
         'Location: /admin/employees.php'
@@ -18,23 +29,39 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| CSRF Validation
+|--------------------------------------------------------------------------
+*/
+
 if (
     !verifyCsrfToken(
-        $_POST['csrf_token'] ?? null
+        $_POST['csrf_token']
+        ?? null
     )
 ) {
 
     http_response_code(403);
 
-    exit('Invalid security token.');
+    exit(
+        'Invalid security token.'
+    );
 }
 
 
-$employeeId = filter_input(
-    INPUT_POST,
-    'employee_id',
-    FILTER_VALIDATE_INT
-);
+/*
+|--------------------------------------------------------------------------
+| Employee ID
+|--------------------------------------------------------------------------
+*/
+
+$employeeId =
+    filter_input(
+        INPUT_POST,
+        'employee_id',
+        FILTER_VALIDATE_INT
+    );
 
 
 if (!$employeeId) {
@@ -52,27 +79,47 @@ if (!$employeeId) {
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| Update Employee Status
+|--------------------------------------------------------------------------
+*/
+
 try {
 
-    $stmt = $pdo->prepare(
-        "SELECT
-            e.employee_id,
-            e.user_id,
-            e.status,
-            r.role_name
-         FROM employees e
+    /*
+    |--------------------------------------------------------------------------
+    | Load Employee
+    |--------------------------------------------------------------------------
+    */
 
-         INNER JOIN users u
-            ON e.user_id = u.user_id
+    $stmt =
+        $pdo->prepare(
+            "SELECT
+                e.employee_id,
+                e.user_id,
+                e.employee_code,
+                e.first_name,
+                e.last_name,
+                e.status,
 
-         INNER JOIN roles r
-            ON u.role_id = r.role_id
+                r.role_name
 
-         WHERE e.employee_id =
-            :employee_id
+             FROM employees e
 
-         LIMIT 1"
-    );
+             INNER JOIN users u
+                ON e.user_id =
+                   u.user_id
+
+             INNER JOIN roles r
+                ON u.role_id =
+                   r.role_id
+
+             WHERE e.employee_id =
+                :employee_id
+
+             LIMIT 1"
+        );
 
 
     $stmt->execute([
@@ -110,10 +157,14 @@ try {
         $teamStmt =
             $pdo->prepare(
                 "SELECT COUNT(*)
+
                  FROM employees
+
                  WHERE manager_id =
                     :manager_id
-                   AND status = 'Active'"
+
+                   AND status =
+                    'Active'"
             );
 
 
@@ -137,26 +188,51 @@ try {
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | Determine New Status
+    |--------------------------------------------------------------------------
+    */
+
+    $oldStatus =
+        $employee['status'];
+
+
     $newStatus =
-        $employee['status']
-        === 'Active'
+        $oldStatus === 'Active'
             ? 'Inactive'
             : 'Active';
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | Begin Transaction
+    |--------------------------------------------------------------------------
+    */
+
     $pdo->beginTransaction();
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Update Employee Record
+    |--------------------------------------------------------------------------
+    */
 
     $employeeUpdate =
         $pdo->prepare(
             "UPDATE employees
-             SET status = :status
+
+             SET status =
+                :status
+
              WHERE employee_id =
                 :employee_id"
         );
 
 
     $employeeUpdate->execute([
+
         'status' =>
             $newStatus,
 
@@ -165,16 +241,26 @@ try {
     ]);
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | Update User Account
+    |--------------------------------------------------------------------------
+    */
+
     $userUpdate =
         $pdo->prepare(
             "UPDATE users
-             SET status = :status
+
+             SET status =
+                :status
+
              WHERE user_id =
                 :user_id"
         );
 
 
     $userUpdate->execute([
+
         'status' =>
             $newStatus,
 
@@ -185,20 +271,64 @@ try {
     ]);
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | Commit Status Change
+    |--------------------------------------------------------------------------
+    */
+
     $pdo->commit();
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Audit Employee Status Change
+    |--------------------------------------------------------------------------
+    */
+
+    logAudit(
+        $pdo,
+        'EMPLOYEE_STATUS_CHANGED',
+        'employee',
+        (int)$employeeId,
+        'Changed '
+        . $employee['role_name']
+        . ' '
+        . $employee['employee_code']
+        . ' - '
+        . $employee['first_name']
+        . ' '
+        . $employee['last_name']
+        . ' status from '
+        . $oldStatus
+        . ' to '
+        . $newStatus
+        . '.'
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Success
+    |--------------------------------------------------------------------------
+    */
 
     setFlash(
         'success',
         'Employee account '
-        . strtolower($newStatus)
+        . strtolower(
+            $newStatus
+        )
         . ' successfully.'
     );
 
 
 } catch (Throwable $e) {
 
-    if ($pdo->inTransaction()) {
+    if (
+        $pdo->inTransaction()
+    ) {
+
         $pdo->rollBack();
     }
 
@@ -217,6 +347,12 @@ try {
     );
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| Redirect
+|--------------------------------------------------------------------------
+*/
 
 header(
     'Location: /admin/employees.php'

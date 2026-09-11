@@ -554,7 +554,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | Newly Created Employee ID
+            |--------------------------------------------------------------------------
+            */
+
+            $employeeId =
+                (int)$pdo
+                    ->lastInsertId();
+
+
             $pdo->commit();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Audit Employee Account Creation
+            |--------------------------------------------------------------------------
+            */
+
+            logAudit(
+                $pdo,
+                'EMPLOYEE_CREATED',
+                'employee',
+                $employeeId,
+                'Created '
+                . $selectedRole['role_name']
+                . ' account '
+                . $employeeCode
+                . ' for '
+                . $firstName
+                . ' '
+                . $lastName
+                . '.'
+            );
 
 
             setFlash(

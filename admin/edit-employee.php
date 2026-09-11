@@ -717,6 +717,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->commit();
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | Audit Employee Update
+            |--------------------------------------------------------------------------
+            */
+
+            $auditDescription =
+                'Updated '
+                . $selectedRole['role_name']
+                . ' '
+                . $employeeCode
+                . ' - '
+                . $firstName
+                . ' '
+                . $lastName
+                . '.';
+
+            if ($newPassword !== '') {
+
+                $auditDescription .=
+                    ' Password was reset.';
+            }
+
+
+            logAudit(
+                $pdo,
+                'EMPLOYEE_UPDATED',
+                'employee',
+                (int)$employeeId,
+                $auditDescription
+            );
+
+
             setFlash(
                 'success',
                 'Employee information updated successfully.'
