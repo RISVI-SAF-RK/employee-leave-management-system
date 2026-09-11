@@ -40,10 +40,18 @@ if (
 |--------------------------------------------------------------------------
 */
 
+$csrfToken =
+    $_POST['csrf_token']
+    ?? null;
+
+
 if (
+    !is_string(
+        $csrfToken
+    )
+    ||
     !verifyCsrfToken(
-        $_POST['csrf_token']
-        ?? null
+        $csrfToken
     )
 ) {
 
@@ -61,15 +69,27 @@ if (
 |--------------------------------------------------------------------------
 */
 
+$policyIdInput =
+    $_POST['policy_id']
+    ?? null;
+
+
 $policyId =
-    filter_input(
-        INPUT_POST,
-        'policy_id',
-        FILTER_VALIDATE_INT
-    );
+    is_string(
+        $policyIdInput
+    )
+        ? filter_var(
+            $policyIdInput,
+            FILTER_VALIDATE_INT
+        )
+        : false;
 
 
-if (!$policyId) {
+if (
+    !$policyId
+    ||
+    $policyId < 1
+) {
 
     setFlash(
         'danger',
@@ -95,7 +115,16 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | Load Policy + Leave Type
+    | Begin Transaction
+    |--------------------------------------------------------------------------
+    */
+
+    $pdo->beginTransaction();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Load And Lock Policy + Leave Type
     |--------------------------------------------------------------------------
     */
 
@@ -117,7 +146,9 @@ try {
              WHERE lp.policy_id =
                 :policy_id
 
-             LIMIT 1"
+             LIMIT 1
+
+             FOR UPDATE"
         );
 
 
@@ -141,13 +172,38 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | Determine New Status
+    | Validate Current Status
     |--------------------------------------------------------------------------
     */
 
     $oldStatus =
-        $policy['status'];
+        $policy[
+            'status'
+        ];
 
+
+    if (
+        !in_array(
+            $oldStatus,
+            [
+                'Active',
+                'Inactive'
+            ],
+            true
+        )
+    ) {
+
+        throw new RuntimeException(
+            'Leave policy has an invalid status.'
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Determine New Status
+    |--------------------------------------------------------------------------
+    */
 
     $newStatus =
         $oldStatus === 'Active'
@@ -181,6 +237,15 @@ try {
         'policy_id' =>
             $policyId
     ]);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Commit Status Change
+    |--------------------------------------------------------------------------
+    */
+
+    $pdo->commit();
 
 
     /*
@@ -223,6 +288,14 @@ try {
 
 
 } catch (Throwable $e) {
+
+    if (
+        $pdo->inTransaction()
+    ) {
+
+        $pdo->rollBack();
+    }
+
 
     error_log(
         'Toggle leave policy error: '
