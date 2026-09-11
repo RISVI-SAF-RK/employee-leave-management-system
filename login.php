@@ -6,103 +6,259 @@ require_once __DIR__ . '/includes/session.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/config/database.php';
 
-if (isset($_SESSION['user_id'], $_SESSION['role'])) {
-    redirectByRole($_SESSION['role']);
+
+/*
+|--------------------------------------------------------------------------
+| Already Logged In
+|--------------------------------------------------------------------------
+*/
+
+if (
+    isset(
+        $_SESSION['user_id'],
+        $_SESSION['role']
+    )
+) {
+
+    redirectByRole(
+        $_SESSION['role']
+    );
 }
+
 
 $error = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $email = trim($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
+/*
+|--------------------------------------------------------------------------
+| Login Form Submission
+|--------------------------------------------------------------------------
+*/
 
-    if ($email === '' || $password === '') {
+if (
+    $_SERVER['REQUEST_METHOD']
+    === 'POST'
+) {
 
-        $error = 'Please enter your email and password.';
+    $email =
+        trim(
+            $_POST['email']
+            ?? ''
+        );
 
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 
-        $error = 'Please enter a valid email address.';
+    $password =
+        $_POST['password']
+        ?? '';
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Basic Validation
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+        $email === ''
+        ||
+        $password === ''
+    ) {
+
+        $error =
+            'Please enter your email and password.';
+
+
+    } elseif (
+        !filter_var(
+            $email,
+            FILTER_VALIDATE_EMAIL
+        )
+    ) {
+
+        $error =
+            'Please enter a valid email address.';
+
 
     } else {
 
         try {
 
-            $stmt = $pdo->prepare(
-                "SELECT
-                    u.user_id,
-                    u.email,
-                    u.password_hash,
-                    u.status,
-                    r.role_name
-                 FROM users u
-                 INNER JOIN roles r
-                    ON u.role_id = r.role_id
-                 WHERE u.email = :email
-                 LIMIT 1"
-            );
+            /*
+            |--------------------------------------------------------------------------
+            | Find User
+            |--------------------------------------------------------------------------
+            */
+
+            $stmt =
+                $pdo->prepare(
+                    "SELECT
+                        u.user_id,
+                        u.email,
+                        u.password_hash,
+                        u.status,
+                        r.role_name
+
+                     FROM users u
+
+                     INNER JOIN roles r
+                        ON u.role_id =
+                           r.role_id
+
+                     WHERE u.email =
+                        :email
+
+                     LIMIT 1"
+                );
+
 
             $stmt->execute([
-                'email' => $email
+                'email' =>
+                    $email
             ]);
 
-            $user = $stmt->fetch();
+
+            $user =
+                $stmt->fetch();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Verify Account And Password
+            |--------------------------------------------------------------------------
+            */
 
             if (
-                $user &&
-                $user['status'] === 'Active' &&
+                $user
+                &&
+                $user['status']
+                    === 'Active'
+                &&
                 password_verify(
                     $password,
-                    $user['password_hash']
+                    $user[
+                        'password_hash'
+                    ]
                 )
             ) {
 
-                session_regenerate_id(true);
+                /*
+                |--------------------------------------------------------------------------
+                | Secure Session
+                |--------------------------------------------------------------------------
+                */
+
+                session_regenerate_id(
+                    true
+                );
+
 
                 $_SESSION['user_id'] =
-                    (int)$user['user_id'];
+                    (int)$user[
+                        'user_id'
+                    ];
+
 
                 $_SESSION['email'] =
-                    $user['email'];
+                    $user[
+                        'email'
+                    ];
+
 
                 $_SESSION['role'] =
-                    $user['role_name'];
+                    $user[
+                        'role_name'
+                    ];
 
-                $updateLogin = $pdo->prepare(
-                    "UPDATE users
-                     SET last_login = NOW()
-                     WHERE user_id = :user_id"
-                );
+
+                /*
+                |--------------------------------------------------------------------------
+                | Update Last Login
+                |--------------------------------------------------------------------------
+                */
+
+                $updateLogin =
+                    $pdo->prepare(
+                        "UPDATE users
+
+                         SET last_login =
+                             NOW()
+
+                         WHERE user_id =
+                             :user_id"
+                    );
+
 
                 $updateLogin->execute([
-                    'user_id' => $user['user_id']
+                    'user_id' =>
+                        (int)$user[
+                            'user_id'
+                        ]
                 ]);
 
-                redirectByRole(
-                    $user['role_name']
+
+                /*
+                |--------------------------------------------------------------------------
+                | Audit Successful Login
+                |--------------------------------------------------------------------------
+                */
+
+                logAudit(
+                    $pdo,
+                    'LOGIN_SUCCESS',
+                    'user',
+                    (int)$user[
+                        'user_id'
+                    ],
+                    'User logged into ELMS successfully.'
                 );
 
+
+                /*
+                |--------------------------------------------------------------------------
+                | Redirect To Correct Dashboard
+                |--------------------------------------------------------------------------
+                */
+
+                redirectByRole(
+                    $user[
+                        'role_name'
+                    ]
+                );
+
+
             } else {
+
+                /*
+                |--------------------------------------------------------------------------
+                | Invalid Login
+                |--------------------------------------------------------------------------
+                */
 
                 $error =
                     'Invalid email or password.';
             }
 
-        } catch (Throwable $e) {
+
+        } catch (
+            Throwable $e
+        ) {
 
             error_log(
-                'Login error: ' .
-                $e->getMessage()
+                'Login error: '
+                . $e->getMessage()
             );
+
 
             $error =
                 'Unable to sign in at the moment.';
         }
     }
 }
+
 ?>
+
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
@@ -114,7 +270,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Login | ELMS</title>
+    <title>
+        Login | ELMS
+    </title>
+
 
     <link
         rel="stylesheet"
@@ -123,27 +282,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 </head>
 
+
 <body class="auth-page">
+
 
 <div class="login-container">
 
     <div class="login-card">
 
-        <h1>Employee Leave Management System</h1>
+        <h1>
+            Employee Leave Management System
+        </h1>
+
 
         <p class="login-subtitle">
             Sign in to continue
         </p>
 
-        <?php if ($error !== ''): ?>
+
+        <?php if (
+            $error !== ''
+        ): ?>
 
             <div class="error-message">
 
-                <?= escape($error) ?>
+                <?= escape(
+                    $error
+                ) ?>
 
             </div>
 
         <?php endif; ?>
+
 
         <form
             method="POST"
@@ -157,6 +327,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     Email Address
                 </label>
 
+
                 <input
                     type="email"
                     id="email"
@@ -164,17 +335,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     required
                     autocomplete="username"
                     value="<?= escape(
-                        $_POST['email'] ?? ''
+                        $_POST[
+                            'email'
+                        ]
+                        ?? ''
                     ) ?>"
                 >
 
             </div>
+
 
             <div class="form-group">
 
                 <label for="password">
                     Password
                 </label>
+
 
                 <input
                     type="password"
@@ -186,11 +362,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             </div>
 
+
             <button
                 type="submit"
                 class="login-button"
             >
+
                 Sign In
+
             </button>
 
         </form>
@@ -198,6 +377,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
 </div>
+
 
 </body>
 
