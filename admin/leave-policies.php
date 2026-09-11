@@ -2,7 +2,18 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__
+    . '/../includes/role_check.php';
+
+require_once __DIR__
+    . '/../includes/functions.php';
+
+require_once __DIR__
+    . '/../config/database.php';
+
+
+requireRole('Administrator');
+
 
 $pageTitle = 'Leave Policies';
 
