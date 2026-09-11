@@ -12,6 +12,12 @@ require_once __DIR__
 requireRole('Administrator');
 
 
+/*
+|--------------------------------------------------------------------------
+| Validate Application ID
+|--------------------------------------------------------------------------
+*/
+
 $applicationId =
     filter_input(
         INPUT_GET,
@@ -20,7 +26,11 @@ $applicationId =
     );
 
 
-if (!$applicationId) {
+if (
+    !$applicationId
+    ||
+    $applicationId < 1
+) {
 
     http_response_code(400);
 
@@ -59,7 +69,11 @@ $attachment =
     $stmt->fetchColumn();
 
 
-if (!$attachment) {
+if (
+    !$attachment
+    ||
+    !is_string($attachment)
+) {
 
     http_response_code(404);
 
@@ -71,7 +85,7 @@ if (!$attachment) {
 
 /*
 |--------------------------------------------------------------------------
-| Persistent Railway Volume
+| Railway Persistent Volume
 |--------------------------------------------------------------------------
 */
 
@@ -81,7 +95,11 @@ $volumePath =
     );
 
 
-if (!$volumePath) {
+if (
+    !$volumePath
+    ||
+    !is_string($volumePath)
+) {
 
     http_response_code(500);
 
@@ -91,24 +109,92 @@ if (!$volumePath) {
 }
 
 
-$fileName =
-    basename(
-        (string)$attachment
+/*
+|--------------------------------------------------------------------------
+| Safe Storage Directory
+|--------------------------------------------------------------------------
+*/
+
+$storageDirectory =
+    rtrim(
+        $volumePath,
+        DIRECTORY_SEPARATOR
+    )
+    . DIRECTORY_SEPARATOR
+    . 'leave-attachments';
+
+
+$realStorageDirectory =
+    realpath(
+        $storageDirectory
     );
 
 
-$filePath =
-    rtrim(
-        $volumePath,
-        '/'
+if (
+    $realStorageDirectory === false
+    ||
+    !is_dir(
+        $realStorageDirectory
     )
-    . '/leave-attachments/'
-    . $fileName;
+) {
+
+    http_response_code(500);
+
+    exit(
+        'Attachment storage is unavailable.'
+    );
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Safe File Name
+|--------------------------------------------------------------------------
+|
+| basename() prevents directory traversal values such as ../../file.pdf
+| from being used directly as a path.
+|
+*/
+
+$fileName =
+    basename(
+        $attachment
+    );
 
 
 if (
-    !is_file(
+    $fileName === ''
+    ||
+    $fileName === '.'
+    ||
+    $fileName === '..'
+) {
+
+    http_response_code(404);
+
+    exit(
+        'Attachment not found.'
+    );
+}
+
+
+$filePath =
+    $realStorageDirectory
+    . DIRECTORY_SEPARATOR
+    . $fileName;
+
+
+$realFilePath =
+    realpath(
         $filePath
+    );
+
+
+if (
+    $realFilePath === false
+    ||
+    !is_file(
+        $realFilePath
     )
 ) {
 
@@ -122,7 +208,37 @@ if (
 
 /*
 |--------------------------------------------------------------------------
-| Safe File Response
+| Ensure File Is Inside Attachment Directory
+|--------------------------------------------------------------------------
+|
+| This also protects against an unexpected symbolic link pointing outside
+| the Railway leave-attachments directory.
+|
+*/
+
+$allowedPathPrefix =
+    $realStorageDirectory
+    . DIRECTORY_SEPARATOR;
+
+
+if (
+    !str_starts_with(
+        $realFilePath,
+        $allowedPathPrefix
+    )
+) {
+
+    http_response_code(403);
+
+    exit(
+        'Invalid attachment path.'
+    );
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Validate MIME Type
 |--------------------------------------------------------------------------
 */
 
@@ -134,16 +250,87 @@ $finfo =
 
 $mimeType =
     $finfo->file(
-        $filePath
+        $realFilePath
     );
 
 
-$extension =
-    pathinfo(
-        $fileName,
-        PATHINFO_EXTENSION
+$allowedMimeTypes = [
+
+    'application/pdf' =>
+        'pdf',
+
+    'image/jpeg' =>
+        'jpg',
+
+    'image/png' =>
+        'png'
+];
+
+
+if (
+    !is_string($mimeType)
+    ||
+    !isset(
+        $allowedMimeTypes[
+            $mimeType
+        ]
+    )
+) {
+
+    http_response_code(415);
+
+    exit(
+        'Unsupported attachment type.'
+    );
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Safe Download File Name
+|--------------------------------------------------------------------------
+*/
+
+$downloadExtension =
+    $allowedMimeTypes[
+        $mimeType
+    ];
+
+
+$downloadFileName =
+    'leave-document-'
+    . $applicationId
+    . '.'
+    . $downloadExtension;
+
+
+/*
+|--------------------------------------------------------------------------
+| File Size
+|--------------------------------------------------------------------------
+*/
+
+$fileSize =
+    filesize(
+        $realFilePath
     );
 
+
+if ($fileSize === false) {
+
+    http_response_code(500);
+
+    exit(
+        'Unable to read attachment.'
+    );
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Secure File Response
+|--------------------------------------------------------------------------
+*/
 
 header(
     'Content-Type: '
@@ -153,17 +340,13 @@ header(
 
 header(
     'Content-Length: '
-    . filesize(
-        $filePath
-    )
+    . $fileSize
 );
 
 
 header(
-    'Content-Disposition: attachment; filename="leave-document-'
-    . $applicationId
-    . '.'
-    . $extension
+    'Content-Disposition: attachment; filename="'
+    . $downloadFileName
     . '"'
 );
 
@@ -173,8 +356,35 @@ header(
 );
 
 
-readfile(
-    $filePath
+header(
+    'Cache-Control: private, no-store, no-cache, must-revalidate'
 );
+
+
+header(
+    'Pragma: no-cache'
+);
+
+
+/*
+|--------------------------------------------------------------------------
+| Send Attachment
+|--------------------------------------------------------------------------
+*/
+
+$result =
+    readfile(
+        $realFilePath
+    );
+
+
+if ($result === false) {
+
+    error_log(
+        'Unable to send leave attachment for application #'
+        . $applicationId
+    );
+}
+
 
 exit;
