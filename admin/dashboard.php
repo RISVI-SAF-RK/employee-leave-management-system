@@ -3,6 +3,11 @@
 declare(strict_types=1);
 
 require_once __DIR__ .
+    '/../includes/role_check.php';
+
+requireRole('Administrator');
+
+require_once __DIR__ .
     '/../config/database.php';
 
 $pageTitle = 'Dashboard';
@@ -445,9 +450,9 @@ require_once __DIR__ .
                     </a>
 
 
-                    <div
+                    <a
+                        href="/admin/add-employee.php"
                         class="quick-action"
-                        style="opacity: 0.6;"
                     >
 
                         <div class="quick-action-icon">
@@ -466,17 +471,17 @@ require_once __DIR__ .
                             </strong>
 
                             <span>
-                                Coming in the next phase
+                                Create a new employee account
                             </span>
 
                         </div>
 
-                    </div>
+                    </a>
 
 
-                    <div
+                    <a
+                        href="/admin/leave-policies.php"
                         class="quick-action"
-                        style="opacity: 0.6;"
                     >
 
                         <div class="quick-action-icon">
@@ -495,12 +500,12 @@ require_once __DIR__ .
                             </strong>
 
                             <span>
-                                Coming soon
+                                Configure and manage leave policies
                             </span>
 
                         </div>
 
-                    </div>
+                    </a>
 
                 </div>
 
