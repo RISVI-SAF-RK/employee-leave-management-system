@@ -1162,9 +1162,9 @@ require_once __DIR__
                     </a>
 
 
-                    <div
-                        class="employee-quick-action
-                               employee-quick-action-disabled"
+                    <a
+                        href="/employee/apply-leave.php"
+                        class="employee-quick-action"
                     >
 
                         <div>
@@ -1184,24 +1184,23 @@ require_once __DIR__
                             </strong>
 
                             <small>
-                                Available next
+                                Submit a new leave request
                             </small>
 
                         </span>
 
 
-                        <span
-                            class="employee-coming-badge"
-                        >
-                            NEXT
-                        </span>
+                        <i
+                            class="bi
+                                   bi-chevron-right"
+                        ></i>
 
-                    </div>
+                    </a>
 
 
-                    <div
-                        class="employee-quick-action
-                               employee-quick-action-disabled"
+                    <a
+                        href="/employee/leave-history.php"
+                        class="employee-quick-action"
                     >
 
                         <div>
@@ -1221,19 +1220,18 @@ require_once __DIR__
                             </strong>
 
                             <small>
-                                Track your requests
+                                Track your leave requests
                             </small>
 
                         </span>
 
 
-                        <span
-                            class="employee-coming-badge"
-                        >
-                            SOON
-                        </span>
+                        <i
+                            class="bi
+                                   bi-chevron-right"
+                        ></i>
 
-                    </div>
+                    </a>
 
                 </div>
 

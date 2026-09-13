@@ -12,6 +12,7 @@ $pageTitle = $pageTitle ?? 'Employee Portal';
 
 $flash = getFlash();
 
+
 /*
 |--------------------------------------------------------------------------
 | Unread Notification Count
@@ -35,9 +36,12 @@ $unreadNotificationCount =
     (int)$notificationCountStmt
         ->fetchColumn();
 
-$currentPage = basename(
-    $_SERVER['PHP_SELF']
-);
+
+$currentPage =
+    basename(
+        $_SERVER['PHP_SELF']
+    );
+
 
 $isActive = static function (
     array $pages
@@ -69,11 +73,12 @@ if (
     )
 ) {
 
-    $displayName = trim(
-        $employeeProfile['first_name']
-        . ' '
-        . $employeeProfile['last_name']
-    );
+    $displayName =
+        trim(
+            $employeeProfile['first_name']
+            . ' '
+            . ($employeeProfile['last_name'] ?? '')
+        );
 }
 
 
@@ -82,13 +87,15 @@ $email =
     ?? '';
 
 
-$avatarLetter = strtoupper(
-    substr(
-        $displayName,
-        0,
-        1
-    )
-);
+$avatarLetter =
+    strtoupper(
+        substr(
+            $displayName,
+            0,
+            1
+        )
+    );
+
 ?>
 <!DOCTYPE html>
 
@@ -264,18 +271,20 @@ $avatarLetter = strtoupper(
 
 
         <a
-    href="/employee/apply-leave.php"
-    class="sidebar-link
-    <?= $isActive([
-        'apply-leave.php'
-    ]) ?>"
->
-    <i class="bi bi-calendar-plus-fill"></i>
+            href="/employee/apply-leave.php"
+            class="sidebar-link
+            <?= $isActive([
+                'apply-leave.php'
+            ]) ?>"
+        >
 
-    <span>
-        Apply for Leave
-    </span>
-</a>
+            <i class="bi bi-calendar-plus-fill"></i>
+
+            <span>
+                Apply for Leave
+            </span>
+
+        </a>
 
 
         <a
@@ -299,19 +308,21 @@ $avatarLetter = strtoupper(
 
 
         <a
-    href="/employee/leave-history.php"
-    class="sidebar-link
-    <?= $isActive([
-        'leave-history.php',
-        'view-leave.php'
-    ]) ?>"
->
-    <i class="bi bi-clock-history"></i>
+            href="/employee/leave-history.php"
+            class="sidebar-link
+            <?= $isActive([
+                'leave-history.php',
+                'view-leave.php'
+            ]) ?>"
+        >
 
-    <span>
-        Leave History
-    </span>
-</a>
+            <i class="bi bi-clock-history"></i>
+
+            <span>
+                Leave History
+            </span>
+
+        </a>
 
 
         <div class="nav-section-title">
@@ -320,39 +331,43 @@ $avatarLetter = strtoupper(
 
 
         <a
-    href="/employee/notifications.php"
-    class="sidebar-link
-    <?= $isActive([
-        'notifications.php'
-    ]) ?>"
->
-    <i class="bi bi-bell-fill"></i>
-
-    <span>
-        Notifications
-    </span>
-
-    <?php if (
-        $unreadNotificationCount > 0
-    ): ?>
-
-        <span
-            class="sidebar-notification-count"
+            href="/employee/notifications.php"
+            class="sidebar-link
+            <?= $isActive([
+                'notifications.php'
+            ]) ?>"
         >
-            <?= $unreadNotificationCount > 99
-                ? '99+'
-                : $unreadNotificationCount
-            ?>
-        </span>
 
-    <?php endif; ?>
-</a>
+            <i class="bi bi-bell-fill"></i>
+
+            <span>
+                Notifications
+            </span>
+
+            <?php if (
+                $unreadNotificationCount > 0
+            ): ?>
+
+                <span
+                    class="sidebar-notification-count"
+                >
+                    <?= $unreadNotificationCount > 99
+                        ? '99+'
+                        : $unreadNotificationCount
+                    ?>
+                </span>
+
+            <?php endif; ?>
+
+        </a>
 
 
         <a
-            href="#"
+            href="/employee/my-profile.php"
             class="sidebar-link
-                   sidebar-link-disabled"
+            <?= $isActive([
+                'my-profile.php'
+            ]) ?>"
         >
 
             <i
@@ -437,31 +452,37 @@ $avatarLetter = strtoupper(
         <div class="topbar-right">
 
             <a
-    href="/employee/notifications.php"
-    class="topbar-icon-button
-           topbar-notification-button"
-    aria-label="Notifications"
->
-    <i class="bi bi-bell"></i>
+                href="/employee/notifications.php"
+                class="topbar-icon-button
+                       topbar-notification-button"
+                aria-label="Notifications"
+            >
 
-    <?php if (
-        $unreadNotificationCount > 0
-    ): ?>
+                <i class="bi bi-bell"></i>
 
-        <span
-            class="topbar-notification-badge"
-        >
-            <?= $unreadNotificationCount > 99
-                ? '99+'
-                : $unreadNotificationCount
-            ?>
-        </span>
+                <?php if (
+                    $unreadNotificationCount > 0
+                ): ?>
 
-    <?php endif; ?>
-</a>
+                    <span
+                        class="topbar-notification-badge"
+                    >
+                        <?= $unreadNotificationCount > 99
+                            ? '99+'
+                            : $unreadNotificationCount
+                        ?>
+                    </span>
+
+                <?php endif; ?>
+
+            </a>
 
 
-            <div class="topbar-profile">
+            <a
+                href="/employee/my-profile.php"
+                class="topbar-profile text-decoration-none"
+                aria-label="My Profile"
+            >
 
                 <div class="topbar-avatar">
 
@@ -489,7 +510,7 @@ $avatarLetter = strtoupper(
 
                 </div>
 
-            </div>
+            </a>
 
         </div>
 
